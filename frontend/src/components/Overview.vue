@@ -25,14 +25,20 @@ const ageMax = ref<number | null>(null)
 const scoreMin = ref<number | null>(null)
 const scoreMax = ref<number | null>(null)
 
+const toNum = (v: number | null | string): number | null => (v === '' || v == null ? null : Number(v))
+
 const filtered = computed(() => {
   const kw = keyword.value.trim().toLowerCase()
+  const aMin = toNum(ageMin.value)
+  const aMax = toNum(ageMax.value)
+  const sMin = toNum(scoreMin.value)
+  const sMax = toNum(scoreMax.value)
   return records.value.filter(r => {
     if (kw && !(r.id.toLowerCase().includes(kw) || r.name.toLowerCase().includes(kw) || r.unit.toLowerCase().includes(kw))) return false
-    if (ageMin.value != null && r.age < ageMin.value) return false
-    if (ageMax.value != null && r.age > ageMax.value) return false
-    if (scoreMin.value != null && r.score < scoreMin.value) return false
-    if (scoreMax.value != null && r.score > scoreMax.value) return false
+    if (aMin != null && r.age < aMin) return false
+    if (aMax != null && r.age > aMax) return false
+    if (sMin != null && r.score < sMin) return false
+    if (sMax != null && r.score > sMax) return false
     return true
   })
 })
@@ -105,10 +111,10 @@ function saveForm() {
           <div class="f-search"><input v-model="keyword" placeholder="姓名 / 编号 / 单位" @input="resetPage" /></div>
         </div>
         <div class="f-group"><label>年龄区间</label>
-          <div class="f-range"><input v-model.number="ageMin" type="number" placeholder="最小" /><span>—</span><input v-model.number="ageMax" type="number" placeholder="最大" /></div>
+          <div class="f-range"><input v-model.number="ageMin" type="number" placeholder="最小" @input="resetPage" /><span>—</span><input v-model.number="ageMax" type="number" placeholder="最大" @input="resetPage" /></div>
         </div>
         <div class="f-group"><label>积分区间</label>
-          <div class="f-range"><input v-model.number="scoreMin" type="number" step="0.01" placeholder="最小" /><span>—</span><input v-model.number="scoreMax" type="number" step="0.01" placeholder="最大" /></div>
+          <div class="f-range"><input v-model.number="scoreMin" type="number" step="0.01" placeholder="最小" @input="resetPage" /><span>—</span><input v-model.number="scoreMax" type="number" step="0.01" placeholder="最大" @input="resetPage" /></div>
         </div>
         <div class="f-group"><label>&nbsp;</label>
           <div style="display:flex;gap:10px;">
@@ -120,7 +126,6 @@ function saveForm() {
           </div>
         </div>
       </div>
-      <input ref="fileInput" type="file" accept=".xlsx,.xls" style="display:none" @change="onImport" />
     </div>
 
     <div class="card">
@@ -151,6 +156,9 @@ function saveForm() {
       </div>
     </div>
   </div>
+
+  <!-- 隐藏的文件输入：始终渲染（空态与非空态均可触发导入） -->
+  <input ref="fileInput" type="file" accept=".xlsx,.xls" style="display:none" @change="onImport" />
 
   <!-- 详情弹窗 -->
   <div class="modal-mask" :class="{ show: detail }">
