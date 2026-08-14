@@ -44,7 +44,7 @@
 
 ## 4. 架构
 
-单页应用，左侧边栏导航 + 右侧内容区，共 5 个板块。
+单页应用，左侧边栏导航 + 右侧内容区，共 6 个板块。
 
 ```
 frontend/
@@ -55,12 +55,14 @@ frontend/
     data/loader.ts                # fetch + 解析 + 派生字段（age）
     utils/stats.ts                # 聚合/分布计算（纯函数，供图表与 AI 工具共用）
     stores/useData.ts             # 全局数据状态
+    stores/useLlmConfig.ts        # 大模型配置 CRUD + localStorage 持久化
     components/
       DataQuery.vue               # 板块1：数据查询
       AgeAnalysis.vue             # 板块2：年龄分析
       UnitAnalysis.vue            # 板块3：单位分析
       ScoreDistribution.vue       # 板块4：积分分布
       AiAssistant.vue             # 板块5：AI 助手
+      LlmConfig.vue               # 板块6：大模型管理
     ai/
       client.ts                   # OpenAI 兼容流式请求封装
       tools.ts                    # 工具定义 + handler
@@ -75,7 +77,7 @@ frontend/
 - **数据模型**：`{ id, name, birth, unit, score }`，加载时派生 `age`。
 - **年龄口径（决策）**：`age = 2026 − 出生年`（以公示年份 2026 为基准，月不参与；出生年月格式为 YYYY-MM）。
 
-## 6. 五个板块
+## 6. 六个板块
 
 ### 6.1 数据查询
 
@@ -105,13 +107,22 @@ frontend/
 ### 6.5 AI 助手
 
 - 聊天界面
-- 右上角设置：Base URL / API Key / 模型名，存 `localStorage`
+- 顶部配置选择：下拉选择使用哪个大模型配置（默认用「大模型管理」中标记为默认的配置）
+- 「清空对话」按钮
+
+### 6.6 大模型管理
+
+- 大模型配置 CRUD 列表，每项字段：显示名称、Base URL、API Key、模型名
+- 新增 / 编辑 / 删除
+- 标记一个为默认配置
+- 存 `localStorage`
+- 注意：静态前端下 API Key 以明文存于浏览器 `localStorage`，属已知局限
 
 ## 7. AI 助手（方案 A：固定工具集）
 
 ### 7.1 调用方式
 
-`POST {baseUrl}/chat/completions`，OpenAI 兼容，请求体含 `messages` 与 `tools`，且 `stream: true`（SSE 流式）。baseUrl 为用户填写的基地址（如 `https://…/v1`），客户端自动补 `/chat/completions`。
+`POST {baseUrl}/chat/completions`，OpenAI 兼容，请求体含 `messages` 与 `tools`，且 `stream: true`（SSE 流式）。`baseUrl`、`apiKey`、`model` 取自 AI 助手当前选中的大模型配置；baseUrl 为基地址（如 `https://…/v1`），客户端自动补 `/chat/completions`。
 
 ### 7.2 工具集（约 10 个，覆盖 统计/排名/明细）
 
@@ -157,7 +168,7 @@ frontend/
 ## 8. 错误处理
 
 - 数据加载失败 → 错误态 + 重试按钮
-- AI 未配置 → 提示先填 Base URL / Key
+- AI 未配置 / 无默认配置 → 提示先到「大模型管理」新增配置
 - AI 请求失败 / 非 200 / 超时 → 聊天内报错
 - 工具执行异常 → 返回错误给模型
 - 空搜索 / 空筛选 → 显示「无匹配」
