@@ -177,6 +177,8 @@ export interface SysUserVO {
   deptId: number
   status: number
   createTime: string
+  /** 已分配的角色 ID（列表接口回填，用于编辑回显）。 */
+  roleIds?: number[]
 }
 
 /** 菜单类型：M 目录 / C 菜单 / F 按钮。 */
@@ -226,6 +228,8 @@ export interface SysRole {
   sort: number
   status: number
   createTime?: string
+  /** 已分配的菜单 ID（列表接口回填，用于权限树回显）。 */
+  menuIds?: number[]
 }
 
 /** 用户新增/编辑请求体。 */

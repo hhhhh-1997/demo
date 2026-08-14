@@ -30,14 +30,23 @@ public class SysRoleService {
     }
 
     /**
-     * 查询全部角色。
+     * 查询全部角色（回填已分配菜单 ID）。
      *
      * @return 角色列表
      */
     public List<SysRole> list() {
-        return roleMapper.selectList(new LambdaQueryWrapper<SysRole>()
+        List<SysRole> roles = roleMapper.selectList(new LambdaQueryWrapper<SysRole>()
                 .orderByAsc(SysRole::getSort)
                 .orderByAsc(SysRole::getId));
+        for (SysRole role : roles) {
+            List<Long> menuIds = roleMenuMapper.selectList(new LambdaQueryWrapper<SysRoleMenu>()
+                            .eq(SysRoleMenu::getRoleId, role.getId()))
+                    .stream()
+                    .map(SysRoleMenu::getMenuId)
+                    .toList();
+            role.setMenuIds(menuIds);
+        }
+        return roles;
     }
 
     /**

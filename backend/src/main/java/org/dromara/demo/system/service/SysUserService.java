@@ -52,6 +52,14 @@ public class SysUserService {
         wrapper.orderByAsc(SysUser::getId);
         Page<SysUser> page = userMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
         List<SysUserVO> list = page.getRecords().stream().map(this::toVO).toList();
+        for (SysUserVO vo : list) {
+            List<Long> roleIds = userRoleMapper.selectList(new LambdaQueryWrapper<SysUserRole>()
+                            .eq(SysUserRole::getUserId, vo.getId()))
+                    .stream()
+                    .map(SysUserRole::getRoleId)
+                    .toList();
+            vo.setRoleIds(roleIds);
+        }
         return new PageResult<>(page.getTotal(), list);
     }
 

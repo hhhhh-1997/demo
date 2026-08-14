@@ -1,6 +1,7 @@
 package org.dromara.demo.system.vo;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 用户列表返回体（不含密码）。
@@ -17,6 +18,9 @@ public class SysUserVO {
     private Integer status;
     private LocalDateTime createTime;
 
+    /** 已分配的角色 ID 集合（列表查询时回填）。 */
+    private List<Long> roleIds;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getUsername() { return username; }
@@ -29,4 +33,6 @@ public class SysUserVO {
     public void setStatus(Integer status) { this.status = status; }
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
+    public List<Long> getRoleIds() { return roleIds; }
+    public void setRoleIds(List<Long> roleIds) { this.roleIds = roleIds; }
 }

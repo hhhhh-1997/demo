@@ -188,7 +188,7 @@ function openEdit(row: SysUserVO): void {
     password: '',
     nickname: row.nickname || '',
     deptId: row.deptId,
-    roleIds: [],
+    roleIds: row.roleIds ?? [],
     status: row.status,
   })
   dialogVisible.value = true
@@ -271,7 +271,9 @@ onMounted(() => {
         <h1 class="page-title">用户管理</h1>
         <p class="page-description">维护系统用户，支持新增、编辑、删除及角色分配</p>
       </div>
-      <el-button type="primary" :icon="Plus" @click="openCreate">新增用户</el-button>
+      <el-button v-permission="'system:user'" type="primary" :icon="Plus" @click="openCreate">
+        新增用户
+      </el-button>
     </div>
 
     <div class="card">
@@ -314,10 +316,22 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="操作" width="120" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" title="编辑" @click="openEdit(row)">
+            <el-button
+              v-permission="'system:user'"
+              link
+              type="primary"
+              title="编辑"
+              @click="openEdit(row)"
+            >
               <el-icon><Edit /></el-icon>
             </el-button>
-            <el-button link type="danger" title="删除" @click="handleDelete(row)">
+            <el-button
+              v-permission="'system:user'"
+              link
+              type="danger"
+              title="删除"
+              @click="handleDelete(row)"
+            >
               <el-icon><Delete /></el-icon>
             </el-button>
           </template>

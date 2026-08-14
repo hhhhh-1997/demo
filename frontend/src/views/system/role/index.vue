@@ -41,7 +41,7 @@ const editingId = ref<number | null>(null)
 const saving = ref(false)
 const formRef = ref<FormInstance>()
 const treeRef = ref<InstanceType<typeof ElTree>>()
-/** 弹窗打开时的已勾选菜单（后端暂不返回角色已有 menuIds，默认为空）。 */
+/** 弹窗打开时的已勾选菜单（编辑时回填角色已有 menuIds）。 */
 const checkedMenuIds = ref<number[]>([])
 /** 弹窗每次打开自增，触发权限树重挂载以应用 default-checked-keys。 */
 const treeVersion = ref(0)
@@ -114,8 +114,7 @@ function openEdit(row: SysRole): void {
     roleKey: row.roleKey,
     sort: row.sort,
   })
-  // 后端角色列表暂未返回 menuIds，编辑时默认不勾选。
-  checkedMenuIds.value = []
+  checkedMenuIds.value = row.menuIds ?? []
   treeVersion.value += 1
   dialogVisible.value = true
   nextTick(() => formRef.value?.clearValidate())
@@ -197,7 +196,9 @@ onMounted(() => {
         <h1 class="page-title">角色管理</h1>
         <p class="page-description">维护系统角色，并为角色分配菜单与按钮权限</p>
       </div>
-      <el-button type="primary" :icon="Plus" @click="openCreate">新增角色</el-button>
+      <el-button v-permission="'system:role'" type="primary" :icon="Plus" @click="openCreate">
+        新增角色
+      </el-button>
     </div>
 
     <div class="card">
@@ -217,10 +218,22 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="操作" width="120" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" title="编辑" @click="openEdit(row)">
+            <el-button
+              v-permission="'system:role'"
+              link
+              type="primary"
+              title="编辑"
+              @click="openEdit(row)"
+            >
               <el-icon><Edit /></el-icon>
             </el-button>
-            <el-button link type="danger" title="删除" @click="handleDelete(row)">
+            <el-button
+              v-permission="'system:role'"
+              link
+              type="danger"
+              title="删除"
+              @click="handleDelete(row)"
+            >
               <el-icon><Delete /></el-icon>
             </el-button>
           </template>

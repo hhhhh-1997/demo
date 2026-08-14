@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 系统角色。
@@ -23,6 +24,10 @@ public class SysRole {
     private String roleKey;
     private Integer sort;
     private Integer status;
+
+    /** 已分配的菜单 ID 集合（非表字段，列表查询时回填）。 */
+    @TableField(exist = false)
+    private List<Long> menuIds;
 
     @TableField(fill = FieldFill.INSERT)
     private Long createBy;
@@ -46,6 +51,8 @@ public class SysRole {
     public void setSort(Integer sort) { this.sort = sort; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
+    public List<Long> getMenuIds() { return menuIds; }
+    public void setMenuIds(List<Long> menuIds) { this.menuIds = menuIds; }
     public Long getCreateBy() { return createBy; }
     public void setCreateBy(Long createBy) { this.createBy = createBy; }
     public LocalDateTime getCreateTime() { return createTime; }

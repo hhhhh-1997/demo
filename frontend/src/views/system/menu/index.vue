@@ -205,7 +205,9 @@ onMounted(loadMenus)
         <h1 class="page-title">菜单管理</h1>
         <p class="page-description">维护系统目录、菜单与按钮权限</p>
       </div>
-      <el-button type="primary" :icon="Plus" @click="openCreate()">新增菜单</el-button>
+      <el-button v-permission="'system:menu'" type="primary" :icon="Plus" @click="openCreate()">
+        新增菜单
+      </el-button>
     </div>
 
     <div class="card">
@@ -246,13 +248,31 @@ onMounted(loadMenus)
         </el-table-column>
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" title="新增下级" @click="openCreate(row.id)">
+            <el-button
+              v-permission="'system:menu'"
+              link
+              type="primary"
+              title="新增下级"
+              @click="openCreate(row.id)"
+            >
               <el-icon><Plus /></el-icon>
             </el-button>
-            <el-button link type="primary" title="编辑" @click="openEdit(row)">
+            <el-button
+              v-permission="'system:menu'"
+              link
+              type="primary"
+              title="编辑"
+              @click="openEdit(row)"
+            >
               <el-icon><Edit /></el-icon>
             </el-button>
-            <el-button link type="danger" title="删除" @click="handleDelete(row)">
+            <el-button
+              v-permission="'system:menu'"
+              link
+              type="danger"
+              title="删除"
+              @click="handleDelete(row)"
+            >
               <el-icon><Delete /></el-icon>
             </el-button>
           </template>
