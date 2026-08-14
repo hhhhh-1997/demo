@@ -1270,11 +1270,11 @@ git commit -m "feat: AI 流式客户端（SSE 解析 + tool_calls 累积）与 s
 
 - [ ] **Step 1: 移植 CSS**
 
-将 `design/beijing-points-dashboard.html` 中 `<style>…</style>`（第 7–343 行）内容**原样**复制到 `frontend/src/styles/theme.css`，做以下适配：
+将 `design/beijing-points-dashboard.html` 中 `<style>…</style>`（第 7–343 行）内容复制到 `frontend/src/styles/theme.css`，做以下适配：
 
-1. 删除原型 `<body>` 的 `display:flex; flex-direction:column; overflow:hidden` 之外的演示专用样式不做改动（这些样式本就是给该布局用的，保留）。
-2. 保留 `:root`、`[data-theme="blue"]`、`[data-color-scheme="dark"]`、`@media (prefers-reduced-motion)` 与全部组件类。
-3. 无需改动选择器——Vue 组件模板会直接复用这些类名（Task 11–17 使用）。
+1. 删除原型 `body` 规则里的 `display:flex; flex-direction:column; overflow:hidden` 三行（Vue 下布局容器是 `#app` 而非 `body`）。
+2. 在 `theme.css` 末尾新增 `#app` 布局规则：`#app { height: 100%; display: flex; flex-direction: column; overflow: hidden; }`（保证顶部导航栏固定 50px、内容区 `flex:1` 可滚动）。
+3. 保留 `:root`、`[data-theme="blue"]`、`[data-color-scheme="dark"]`、`@media (prefers-reduced-motion)` 与全部组件类；其余样式逐字保留，不改类名。
 
 - [ ] **Step 2: 实现 useTheme.ts**
 
