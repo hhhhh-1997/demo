@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
+import jakarta.validation.constraints.NotBlank;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,11 +22,15 @@ public class SysMenu {
 
     @TableId(type = IdType.AUTO)
     private Long id;
+
+    @NotBlank(message = "菜单名称不能为空")
     private String menuName;
     private Long parentId;
     private String path;
     private String component;
     private String perms;
+
+    @NotBlank(message = "菜单类型不能为空")
     private String menuType;
     private String icon;
     private Integer sort;

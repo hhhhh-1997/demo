@@ -33,8 +33,8 @@ public class SysMenuController {
     }
 
     @SaCheckPermission("system:menu")
-    @GetMapping("/tree")
-    public Result<List<SysMenu>> tree() {
+    @GetMapping("/list")
+    public Result<List<SysMenu>> list() {
         return Result.success(menuService.listTree());
     }
 
