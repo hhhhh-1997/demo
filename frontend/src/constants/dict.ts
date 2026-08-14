@@ -27,18 +27,9 @@ export const ROLES: DictOption<string>[] = [
   { value: 'ro', label: '实施需设' },
 ]
 
-export const DATA_MONTHS: string[] = ['2026-05', '2026-06', '2026-07']
-
 export function currentMonth(): string {
   const d = new Date()
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
   return `${y}-${m}`
-}
-
-// 月份选项 = 数据月份 + 当前月（去重后降序），不含「全部」
-export function monthOptions(): string[] {
-  const set = new Set<string>(DATA_MONTHS)
-  set.add(currentMonth())
-  return Array.from(set).sort((a, b) => (a < b ? 1 : -1))
 }

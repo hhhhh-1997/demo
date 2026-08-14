@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { fetchMonthly } from '../api/performance'
-import { ROLES, TOP_DEPTS, currentMonth, monthOptions } from '../constants/dict'
+import { ROLES, TOP_DEPTS, currentMonth } from '../constants/dict'
 import type { Performance } from '../types/performance'
 import { fmtScore, gradeBadge } from '../utils/format'
 
 type ColumnKind = 'text' | 'score' | 'grade'
+type SortOrder = 'ascending' | 'descending'
 
 interface Column {
   prop: string
@@ -13,6 +14,7 @@ interface Column {
   kind: ColumnKind
   width: number
   fixed?: boolean
+  sortable?: boolean
 }
 
 // 15 列展示顺序与原型一致（售前支撑为等级项，穿插在分值列之间）
@@ -22,21 +24,19 @@ const COLUMNS: Column[] = [
   { prop: 'topDeptName', label: '一级部门', kind: 'text', width: 120 },
   { prop: 'deptName', label: '二级部门', kind: 'text', width: 140 },
   { prop: 'roleName', label: '岗位', kind: 'text', width: 110 },
-  { prop: 'taskFinishRate', label: '任务完成率', kind: 'score', width: 120 },
-  { prop: 'workEffectRate', label: '工作有效率', kind: 'score', width: 120 },
-  { prop: 'workNormativity', label: '工作规范性', kind: 'score', width: 120 },
-  { prop: 'learningImprovement', label: '学习及能力提升', kind: 'score', width: 120 },
-  { prop: 'softwareDesign', label: '软需设计', kind: 'score', width: 120 },
+  { prop: 'taskFinishRate', label: '任务完成率', kind: 'score', width: 120, sortable: true },
+  { prop: 'workEffectRate', label: '工作有效率', kind: 'score', width: 120, sortable: true },
+  { prop: 'workNormativity', label: '工作规范性', kind: 'score', width: 120, sortable: true },
+  { prop: 'learningImprovement', label: '学习及能力提升', kind: 'score', width: 120, sortable: true },
+  { prop: 'softwareDesign', label: '软需设计', kind: 'score', width: 120, sortable: true },
   { prop: 'preSalesSupport', label: '售前支撑', kind: 'grade', width: 120 },
-  { prop: 'bugCondition', label: '缺陷情况', kind: 'score', width: 120 },
-  { prop: 'systemDesign', label: '概要设计', kind: 'score', width: 120 },
-  { prop: 'codeReview', label: '代码评审', kind: 'score', width: 120 },
+  { prop: 'bugCondition', label: '缺陷情况', kind: 'score', width: 120, sortable: true },
+  { prop: 'systemDesign', label: '概要设计', kind: 'score', width: 120, sortable: true },
+  { prop: 'codeReview', label: '代码评审', kind: 'score', width: 120, sortable: true },
   { prop: 'testQuality', label: '测试产出质量', kind: 'grade', width: 120 },
 ]
 
-const months = monthOptions()
-
-const filters = reactive<{ topDeptId: number | null; role: string; month: string }>({
+const filters = reactive<{ topDeptId: number | null; role: string; month: string | null }>({
   topDeptId: null, // null = 全部（空值表达）
   role: '',        // '' = 全部
   month: currentMonth(), // 默认当前月（动态，当前 2026-08）
@@ -45,6 +45,37 @@ const filters = reactive<{ topDeptId: number | null; role: string; month: string
 const rows = ref<Performance[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
+
+// 表头排序状态；null = 未排序（沿用后端自然顺序）
+const sortState = ref<{ prop: string; order: SortOrder } | null>(null)
+
+function handleSortChange({ prop, order }: { prop: string; order: SortOrder | null }) {
+  sortState.value = order ? { prop, order } : null
+}
+
+// 可排序列均为分值项，非数值一律视为「无值」
+function scoreValue(row: Performance, prop: string): number | null {
+  const v = row[prop as keyof Performance]
+  return typeof v === 'number' ? v : null
+}
+
+// NULL（无该项工作）恒排最后，不参与数值比较；0 是有效分值，正常排序
+function compareScore(a: Performance, b: Performance, prop: string, dir: number): number {
+  const av = scoreValue(a, prop)
+  const bv = scoreValue(b, prop)
+  if (av === null && bv === null) return 0
+  if (av === null) return 1
+  if (bv === null) return -1
+  return av > bv ? dir : av < bv ? -dir : 0
+}
+
+// 前端排序：不改动后端返回原始顺序，仅对副本排序后展示
+const displayRows = computed<Performance[]>(() => {
+  if (!sortState.value) return rows.value
+  const { prop, order } = sortState.value
+  const dir = order === 'ascending' ? 1 : -1
+  return [...rows.value].sort((a, b) => compareScore(a, b, prop, dir))
+})
 
 async function query() {
   loading.value = true
@@ -67,7 +98,7 @@ async function query() {
 function reset() {
   filters.topDeptId = null
   filters.role = ''
-  filters.month = currentMonth()
+  filters.month = null
   query()
 }
 
@@ -94,10 +125,14 @@ onMounted(query)
       </div>
       <div class="form-control">
         <label class="form-label">月份</label>
-        <el-select v-model="filters.month" class="filter-select">
-          <el-option label="全部" value="" />
-          <el-option v-for="m in months" :key="m" :label="m" :value="m" />
-        </el-select>
+        <el-date-picker
+          v-model="filters.month"
+          type="month"
+          value-format="YYYY-MM"
+          placeholder="全部"
+          clearable
+          class="filter-select"
+        />
       </div>
       <div class="filter-actions">
         <el-button type="primary" @click="query">查询</el-button>
@@ -116,10 +151,11 @@ onMounted(query)
     <el-table
       v-if="!error"
       v-loading="loading"
-      :data="rows"
+      :data="displayRows"
       border
       height="62vh"
       class="perf-table"
+      @sort-change="handleSortChange"
     >
       <template #empty>
         <el-empty description="暂无数据" :image-size="80">
@@ -134,6 +170,7 @@ onMounted(query)
         :label="c.label"
         :width="c.width"
         :fixed="c.fixed ? 'left' : undefined"
+        :sortable="c.sortable ? 'custom' : false"
         :align="c.kind === 'score' ? 'right' : 'left'"
       >
         <template v-if="c.kind === 'score'" #default="{ row }">
