@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useTheme } from './composables/useTheme'
 import Overview from './components/Overview.vue'
+import AgeAnalysis from './components/AgeAnalysis.vue'
 
 const { theme, toggle } = useTheme()
 
@@ -39,7 +40,7 @@ const current = ref<(typeof pages)[number]['key']>('overview')
   <main class="content">
     <!-- Task 12–17 逐板块替换为真实组件 -->
     <Overview v-if="current === 'overview'" />
-    <div v-else-if="current === 'age'">年龄分析（待实现）</div>
+    <AgeAnalysis v-else-if="current === 'age'" />
     <div v-else-if="current === 'unit'">单位分析（待实现）</div>
     <div v-else-if="current === 'score'">积分分布（待实现）</div>
     <div v-else-if="current === 'ai'">AI 智能问数（待实现）</div>
