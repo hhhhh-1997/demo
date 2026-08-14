@@ -982,7 +982,7 @@ import {
 export interface ToolDef {
   name: string
   description: string
-  parameters: Record<string, unknown>
+  parameters: { [key: string]: unknown }
   handler: (records: Record[], args: any) => unknown
 }
 
@@ -1050,8 +1050,9 @@ export const TOOLS: ToolDef[] = [
       required: ['field'],
     },
     handler: (records, a) => {
+      const field = a.field as 'age' | 'score'
       const min = a.min ?? -Infinity, max = a.max ?? Infinity
-      return { count: records.filter(r => r[a.field] >= min && r[a.field] <= max).length }
+      return { count: records.filter(r => r[field] >= min && r[field] <= max).length }
     },
   },
   {
