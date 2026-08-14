@@ -5,6 +5,7 @@ import Overview from './components/Overview.vue'
 import AgeAnalysis from './components/AgeAnalysis.vue'
 import UnitAnalysis from './components/UnitAnalysis.vue'
 import ScoreDistribution from './components/ScoreDistribution.vue'
+import AiAssistant from './components/AiAssistant.vue'
 
 const { theme, toggle } = useTheme()
 
@@ -45,7 +46,7 @@ const current = ref<(typeof pages)[number]['key']>('overview')
     <AgeAnalysis v-else-if="current === 'age'" />
     <UnitAnalysis v-else-if="current === 'unit'" />
     <ScoreDistribution v-else-if="current === 'score'" />
-    <div v-else-if="current === 'ai'">AI 智能问数（待实现）</div>
+    <AiAssistant v-else-if="current === 'ai'" />
     <div v-else-if="current === 'model'">大模型管理（待实现）</div>
   </main>
 </template>
