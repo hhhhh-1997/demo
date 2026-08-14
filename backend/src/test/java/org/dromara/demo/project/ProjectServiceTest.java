@@ -9,6 +9,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -80,5 +83,13 @@ class ProjectServiceTest {
         String code = service.generateCode();
         assertTrue(code.startsWith("XM"));
         assertTrue(code.endsWith("001"));
+    }
+
+    @Test
+    void generateCode_shouldIncrementExistingMax() {
+        String prefix = "XM" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
+        Mockito.when(mapper.selectMaxCodeByMonth(Mockito.anyString())).thenReturn(prefix + "005");
+        String code = service.generateCode();
+        assertEquals(prefix + "006", code);
     }
 }
