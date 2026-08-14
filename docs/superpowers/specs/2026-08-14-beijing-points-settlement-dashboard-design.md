@@ -21,13 +21,13 @@
 
 - 静态前端，构建产物可部署到任意静态服务器
 - 浏览器内运行与交互，无后端服务器
-- 数据从官方 Excel 加载，真实准确
+- 数据从官方 Excel 导入，真实准确
 - 搜索、筛选、图表、AI 问数
+- Excel 导入（首次初始化 / 后续增量导入）与手动数据维护（增删改）
 
 **在范围外（明确不做）：**
 
 - 后端服务 / API
-- 数据写入与编辑
 - 用户登录 / 权限
 - 移动端适配（桌面端优先）
 
@@ -38,23 +38,21 @@
 | 框架 | 现有 Vue 3 + TypeScript + Vite 脚手架 |
 | UI 组件 | Naive UI（已依赖） |
 | 图表 | ECharts（新增依赖） |
-| 数据加载 | 构建时 xlsx → JSON，产物随静态资源打包 |
+| 数据加载 | 浏览器内解析 Excel（SheetJS / `xlsx`），导入后存 localStorage |
 | AI 调用 | OpenAI 兼容 `/v1/chat/completions`，支持 `tools`（function calling） |
 | AI 数据访问 | 方案 A：固定工具集 |
 
 ## 4. 架构
 
-单页应用，左侧边栏导航 + 右侧内容区，共 6 个板块。
+单页应用，左侧边栏导航 + 右侧内容区，共 7 个板块。
 
 ```
 frontend/
-  scripts/convert-xlsx.mjs        # 构建时 xlsx → JSON 转换脚本（devDependency: xlsx）
-  public/data/records.json        # 转换产物，运行时 fetch
   src/
     types.ts                      # Record 接口
-    data/loader.ts                # fetch + 解析 + 派生字段（age）
+    data/importer.ts              # 浏览器解析 Excel（SheetJS）+ 派生字段（age）
     utils/stats.ts                # 聚合/分布计算（纯函数，供图表与 AI 工具共用）
-    stores/useData.ts             # 全局数据状态
+    stores/useData.ts             # 全局数据状态 + localStorage 持久化
     stores/useLlmConfig.ts        # 大模型配置 CRUD + localStorage 持久化
     components/
       DataQuery.vue               # 板块1：数据查询
@@ -63,6 +61,7 @@ frontend/
       ScoreDistribution.vue       # 板块4：积分分布
       AiAssistant.vue             # 板块5：AI 助手
       LlmConfig.vue               # 板块6：大模型管理
+      DataManage.vue              # 板块7：数据管理（导入 + 增删改）
     ai/
       client.ts                   # OpenAI 兼容流式请求封装
       tools.ts                    # 工具定义 + handler
@@ -72,12 +71,14 @@ frontend/
 
 ## 5. 数据层
 
-- **数据源**：`docs/北京市2026年积分落户公示名单.xlsx`（6003 条，5 列：公示编号、姓名、出生年月、单位名称、积分分值）。
-- **转换**：`scripts/convert-xlsx.mjs` 用 SheetJS（`xlsx` 依赖）读取 Excel，输出 `public/data/records.json`；挂在 `prebuild`/`predev` 脚本上，构建/开发前自动执行。
+- **数据源**：用户通过浏览器导入官方 Excel（如 `docs/北京市2026年积分落户公示名单.xlsx`，6003 条，5 列：公示编号、姓名、出生年月、单位名称、积分分值）。项目**初始无数据**，靠导入初始化。
+- **导入**：`data/importer.ts` 用 SheetJS（`xlsx` 依赖，运行时）在浏览器解析 `.xlsx`；首次导入 = 初始化（全量加载），再次导入 = 增量导入（按公示编号 upsert：已存在则更新、不存在则新增）。
+- **持久化**：当前数据存 `localStorage`（约 707KB，限额内），刷新后恢复；空数据时各板块显示「暂无数据，请先导入」。
+- **手动维护**：单条记录的增 / 删 / 改，改动即时写入 `localStorage`。
 - **数据模型**：`{ id, name, birth, unit, score }`，加载时派生 `age`。
 - **年龄口径（决策）**：`age = 2026 − 出生年`（以公示年份 2026 为基准，月不参与；出生年月格式为 YYYY-MM）。
 
-## 6. 六个板块
+## 6. 七个板块
 
 ### 6.1 数据查询
 
@@ -117,6 +118,12 @@ frontend/
 - 标记一个为默认配置
 - 存 `localStorage`
 - 注意：静态前端下 API Key 以明文存于浏览器 `localStorage`，属已知局限
+
+### 6.7 数据管理
+
+- 「导入 Excel」：选择 `.xlsx`，浏览器内解析；首次导入初始化（全量），之后增量导入（按公示编号 upsert：存在则更新、不存在则新增）
+- 记录增 / 删 / 改：表格内编辑，改动即时写入 `localStorage`
+- 「清空数据」：一键清空当前数据
 
 ## 7. AI 助手（方案 A：固定工具集）
 
@@ -167,7 +174,8 @@ frontend/
 
 ## 8. 错误处理
 
-- 数据加载失败 → 错误态 + 重试按钮
+- 导入失败 / 文件解析失败 → 错误提示
+- 数据为空 → 各板块显示「暂无数据，请先导入」
 - AI 未配置 / 无默认配置 → 提示先到「大模型管理」新增配置
 - AI 请求失败 / 非 200 / 超时 → 聊天内报错
 - 工具执行异常 → 返回错误给模型
@@ -178,3 +186,5 @@ frontend/
 1. 年龄口径：`2026 − 出生年`
 2. 积分分段：默认每 10 分
 3. AI 采用流式输出（SSE）
+4. 数据初始为空，首次导入初始化、之后增量导入（按公示编号 upsert）
+5. 数据存 `localStorage`
