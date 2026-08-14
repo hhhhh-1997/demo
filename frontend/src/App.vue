@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import logo from './assets/logo-white.png'
+import PerformanceQuery from './components/PerformanceQuery.vue'
 </script>
 
 <template>
@@ -18,6 +19,6 @@ import logo from './assets/logo-white.png'
       <el-breadcrumb-item>绩效月报查询</el-breadcrumb-item>
     </el-breadcrumb>
     <h1 class="page-title">绩效月报查询</h1>
-    <!-- Task 7 将在此挂载 <PerformanceQuery /> -->
+    <PerformanceQuery />
   </main>
 </template>
