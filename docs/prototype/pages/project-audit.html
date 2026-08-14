@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>储备项目审核</title>
+    <link rel="stylesheet" href="../css/page.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="../js/page-common.js"></script>
+</head>
+<body>
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">储备项目审核</h1>
+            <p class="page-description">人工复核论证是否准确，通过或退回业务流程</p>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-success" onclick="batchApprove()"><i class="fas fa-check"></i> 批量通过</button>
+            <button class="btn btn-outline" onclick="batchReject()"><i class="fas fa-times"></i> 批量退回</button>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card warning"><div class="stat-info"><h3 id="stat-pending">0</h3><p>待审核项目</p></div><div class="stat-icon"><i class="fas fa-clock"></i></div></div>
+        <div class="stat-card success"><div class="stat-info"><h3 id="stat-passed">0</h3><p>已审核通过</p></div><div class="stat-icon"><i class="fas fa-check-circle"></i></div></div>
+        <div class="stat-card danger"><div class="stat-info"><h3 id="stat-rejected">0</h3><p>已退回</p></div><div class="stat-icon"><i class="fas fa-undo"></i></div></div>
+        <div class="stat-card info"><div class="stat-info"><h3 id="stat-rate">0%</h3><p>通过率</p></div><div class="stat-icon"><i class="fas fa-chart-pie"></i></div></div>
+    </div>
+
+    <div class="card">
+        <div class="filter-bar">
+            <div class="form-group">
+                <label>项目名称</label>
+                <input type="text" class="form-control" id="filter-name" placeholder="请输入项目名称" oninput="onFilterChange()">
+            </div>
+            <div class="form-group">
+                <label>二级分类</label>
+                <select class="form-control" id="filter-category" onchange="onFilterChange()">
+                    <option value="">全部</option>
+                    <option value="电网基建">电网基建</option>
+                    <option value="生产设备技改">生产设备技改</option>
+                    <option value="固定资产零购">固定资产零购</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>审核状态</label>
+                <select class="form-control" id="filter-status" onchange="onFilterChange()">
+                    <option value="">全部</option>
+                    <option value="待审核">待审核</option>
+                    <option value="已通过">已通过</option>
+                    <option value="已退回">已退回</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">项目列表</h3>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;"><input type="checkbox" id="select-all" onchange="toggleSelectAll()"></th>
+                            <th>项目编码</th>
+                            <th>项目名称</th>
+                            <th>二级分类</th>
+                            <th>投资金额（万元）</th>
+                            <th>论证结果</th>
+                            <th>审核状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+            </div>
+            <div id="pagination-container"></div>
+        </div>
+    </div>
+
+    <div id="modal-container"></div>
+
+    <script>
+        const auditProjects = [
+            { code: 'XM202401001', name: '川南电网改造升级工程', category: '电网基建', amount: 5200, reviewResult: '通过', status: '待审核', reviewOpinion: '项目信息完整，符合三重一大要求，无拆分立项和界面混淆问题，建议通过论证', auditOpinion: '', auditTime: '' },
+            { code: 'XM202401002', name: '变电站设备技术改造', category: '生产设备技改', amount: 3800, reviewResult: '通过', status: '已通过', reviewOpinion: '论证通过，建议纳入储备库', auditOpinion: '同意论证意见，项目信息完整，审核通过', auditTime: '2024-01-15 14:30' },
+            { code: 'XM202401003', name: '新能源充电桩建设项目', category: '电网基建', amount: 2100, reviewResult: '不通过', status: '已退回', reviewOpinion: '信息不完整，拆分立项存在问题', auditOpinion: '论证意见准确，退回补充材料', auditTime: '2024-01-15 16:00' },
+            { code: 'XM202401004', name: '智能配电网升级工程', category: '电网基建', amount: 6800, reviewResult: '通过', status: '待审核', reviewOpinion: '项目条件成熟，论证通过', auditOpinion: '', auditTime: '' },
+            { code: 'XM202401005', name: '变电站自动化改造', category: '生产设备技改', amount: 4500, reviewResult: '通过', status: '已通过', reviewOpinion: '项目信息完整，通过论证', auditOpinion: '同意，审核通过', auditTime: '2024-01-14 10:00' },
+            { code: 'XM202401006', name: '储能电站建设项目', category: '固定资产零购', amount: 12000, reviewResult: '通过', status: '待审核', reviewOpinion: '符合规划方向，建议通过', auditOpinion: '', auditTime: '' },
+            { code: 'XM202401007', name: '配网自动化终端更新', category: '生产设备技改', amount: 1800, reviewResult: '不通过', status: '已退回', reviewOpinion: '界面混淆问题未解决', auditOpinion: '退回重新论证', auditTime: '2024-01-13 09:15' },
+            { code: 'XM202401008', name: '新能源并网工程', category: '电网基建', amount: 9500, reviewResult: '通过', status: '已通过', reviewOpinion: '论证通过', auditOpinion: '审核通过，同意入库', auditTime: '2024-01-12 11:45' },
+        ];
+
+        let currentPage = 1;
+        const pageSize = 5;
+
+        function updateStats() {
+            const total = auditProjects.length;
+            const passed = auditProjects.filter(p => p.status === '已通过').length;
+            const rejected = auditProjects.filter(p => p.status === '已退回').length;
+            const pending = auditProjects.filter(p => p.status === '待审核').length;
+            document.getElementById('stat-pending').textContent = pending;
+            document.getElementById('stat-passed').textContent = passed;
+            document.getElementById('stat-rejected').textContent = rejected;
+            document.getElementById('stat-rate').textContent = total > 0 ? ((passed + rejected) > 0 ? (passed / (passed + rejected) * 100).toFixed(1) : '0.0') + '%' : '0%';
+        }
+
+        function onFilterChange() { currentPage = 1; renderTable(); }
+        function goToPage(p) { currentPage = p; renderTable(); }
+
+        function renderTable() {
+            const nameFilter = document.getElementById('filter-name').value.toLowerCase();
+            const categoryFilter = document.getElementById('filter-category').value;
+            const statusFilter = document.getElementById('filter-status').value;
+            let filtered = auditProjects.filter(p => {
+                if (nameFilter && !p.name.toLowerCase().includes(nameFilter)) return false;
+                if (categoryFilter && p.category !== categoryFilter) return false;
+                if (statusFilter && p.status !== statusFilter) return false;
+                return true;
+            });
+            const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            const start = (currentPage - 1) * pageSize;
+            const pageItems = filtered.slice(start, start + pageSize);
+            document.getElementById('table-body').innerHTML = pageItems.map(p => {
+                const canAudit = p.status === '待审核';
+                return '<tr>' +
+                    '<td><input type="checkbox" class="row-checkbox" value="' + p.code + '" onchange="updateSelectAll()"></td>' +
+                    '<td>' + p.code + '</td>' +
+                    '<td>' + p.name + '</td>' +
+                    '<td><span class="badge badge-primary">' + p.category + '</span></td>' +
+                    '<td class="text-right">' + p.amount.toLocaleString() + '</td>' +
+                    '<td>' + badge(p.reviewResult === '通过' ? 'success' : 'danger', p.reviewResult) + '</td>' +
+                    '<td>' + badge(p.status === '已通过' ? 'success' : p.status === '已退回' ? 'danger' : 'warning', p.status) + '</td>' +
+                    '<td><div class="action-buttons">' +
+                        (canAudit ? '<button class="icon-btn" onclick="openAuditModal(\'' + p.code + '\',\'' + p.name + '\')"><i class="fas fa-edit"></i></button>' : '') +
+                        '<button class="icon-btn" onclick="viewDetail(\'' + p.code + '\',\'' + p.name + '\')"><i class="fas fa-eye"></i></button>' +
+                    '</div></td></tr>';
+            }).join('');
+            document.getElementById('pagination-container').innerHTML = renderPagination(filtered.length, pageSize, currentPage, 'goToPage');
+            document.getElementById('select-all').checked = false;
+            updateStats();
+        }
+
+        function badge(cls, text) { return '<span class="badge badge-' + cls + '">' + text + '</span>'; }
+
+        function toggleSelectAll() {
+            const checked = document.getElementById('select-all').checked;
+            document.querySelectorAll('.row-checkbox').forEach(cb => { cb.checked = checked; });
+        }
+        function updateSelectAll() {
+            const all = document.querySelectorAll('.row-checkbox');
+            const checked = document.querySelectorAll('.row-checkbox:checked');
+            document.getElementById('select-all').checked = all.length > 0 && all.length === checked.length;
+            document.getElementById('select-all').indeterminate = checked.length > 0 && all.length !== checked.length;
+        }
+
+        function batchApprove() {
+            const selected = document.querySelectorAll('.row-checkbox:checked');
+            if (selected.length === 0) { alert('请先选择要审核的项目'); return; }
+            if (confirm('确定要通过选中的 ' + selected.length + ' 个项目吗？')) {
+                selected.forEach(cb => {
+                    const p = auditProjects.find(x => x.code === cb.value);
+                    if (p && p.status === '待审核') { p.status = '已通过'; p.auditTime = new Date().toISOString().replace('T', ' ').substring(0, 16); }
+                });
+                onFilterChange();
+            }
+        }
+
+        function batchReject() {
+            const selected = document.querySelectorAll('.row-checkbox:checked');
+            if (selected.length === 0) { alert('请先选择要审核的项目'); return; }
+            if (confirm('确定要退回选中的 ' + selected.length + ' 个项目吗？')) {
+                selected.forEach(cb => {
+                    const p = auditProjects.find(x => x.code === cb.value);
+                    if (p && p.status === '待审核') { p.status = '已退回'; p.auditTime = new Date().toISOString().replace('T', ' ').substring(0, 16); }
+                });
+                onFilterChange();
+            }
+        }
+
+        function openAuditModal(code, name) {
+            const p = auditProjects.find(x => x.code === code) || {};
+            showModal('项目审核', '<div class="form-grid" style="grid-template-columns:1fr 1fr;">' +
+                field('项目编码', code) +
+                field('项目名称', name) +
+                field('二级分类', '<span class="badge badge-primary">' + p.category + '</span>') +
+                field('投资金额', (p.amount || 0).toLocaleString() + '万元') +
+                field('论证结果', badge(p.reviewResult === '通过' ? 'success' : 'danger', p.reviewResult)) +
+                '<div class="form-group" style="grid-column:1/-1;"><label>论证意见</label><div style="padding:10px;background:var(--bg-secondary);border-radius:8px;">' + (p.reviewOpinion || '—') + '</div></div>' +
+                '<hr style="grid-column:1/-1;border:1px solid var(--border-color);margin:8px 0;">' +
+                '<h4 style="grid-column:1/-1;color:var(--text-primary);margin-bottom:4px;">审核意见</h4>' +
+                '<div class="form-group" style="grid-column:1/-1;"><label>审核意见</label><textarea class="form-control" placeholder="请输入审核意见"></textarea></div>' +
+                '<div class="form-group" style="grid-column:1/-1;"><label>审核结果</label><select class="form-control"><option>请选择</option><option>通过</option><option>退回</option></select></div>' +
+            '</div>');
+        }
+
+        function viewDetail(code, name) {
+            const p = auditProjects.find(x => x.code === code) || {};
+            const st = p.status === '已通过' ? 'success' : p.status === '已退回' ? 'danger' : 'warning';
+            showModal('审核详情', '<div class="form-grid" style="grid-template-columns:1fr 1fr;">' +
+                field('项目编码', code) +
+                field('项目名称', name) +
+                field('二级分类', '<span class="badge badge-primary">' + p.category + '</span>') +
+                field('投资金额', (p.amount || 0).toLocaleString() + '万元') +
+                field('论证结果', badge(p.reviewResult === '通过' ? 'success' : 'danger', p.reviewResult)) +
+                field('审核状态', '<span class="badge badge-' + st + '">' + p.status + '</span>') +
+                '<div class="form-group" style="grid-column:1/-1;"><label>论证意见</label><div style="padding:10px;background:var(--bg-secondary);border-radius:8px;">' + (p.reviewOpinion || '—') + '</div></div>' +
+                '<div class="form-group" style="grid-column:1/-1;"><label>审核意见</label><div style="padding:10px;background:var(--bg-secondary);border-radius:8px;min-height:40px;">' + (p.auditOpinion || '—') + '</div></div>' +
+                field('审核时间', p.auditTime || '—') +
+            '</div>', true);
+        }
+
+        function field(label, value) {
+            return '<div class="form-group" style="flex-direction:row;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border-color);">' +
+                '<label style="white-space:nowrap;min-width:70px;margin-bottom:0;">' + label + '</label>' +
+                '<span style="color:var(--text-primary);">' + value + '</span>' +
+            '</div>';
+        }
+
+        updateStats();
+        renderTable();
+    </script>
+</body>
+</html>

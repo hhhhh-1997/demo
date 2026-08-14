@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>储备项目维护</title>
+    <link rel="stylesheet" href="../css/page.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .btn-warning { background: linear-gradient(135deg, var(--warning-color) 0%, #e65100 100%); color: white; }
+        .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(251, 140, 0, 0.4); }
+        .btn-danger { background: linear-gradient(135deg, var(--danger-color) 0%, #c62828 100%); color: white; }
+        .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(229, 57, 53, 0.4); }
+        .icon-btn.danger:hover { background: rgba(229, 57, 53, 0.15); border-color: var(--danger-color); color: var(--danger-color); }
+        .icon-btn.disabled { opacity: 0.35; pointer-events: none; cursor: not-allowed; }
+        .empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+        .empty-state i { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+        .empty-state p { font-size: 14px; }
+        .text-right { text-align: right; }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">储备项目维护</h1>
+            <p class="page-description">维护储备项目，支持新增、编辑、删除及提报操作</p>
+        </div>
+        <button class="btn btn-primary" onclick="openAddModal()">
+            <i class="fas fa-plus"></i> 新增项目
+        </button>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-info">
+                <h3 id="stat-total">0</h3>
+                <p>项目总数</p>
+            </div>
+            <div class="stat-icon"><i class="fas fa-layer-group"></i></div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-info">
+                <h3 id="stat-draft">0</h3>
+                <p>草稿（未提报）</p>
+            </div>
+            <div class="stat-icon"><i class="fas fa-edit"></i></div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-info">
+                <h3 id="stat-submitted">0</h3>
+                <p>已提报</p>
+            </div>
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+        </div>
+    </div>
+
+    <!-- 筛选栏 -->
+    <div class="card">
+        <div class="filter-bar">
+            <div class="form-group">
+                <label>二级分类</label>
+                <select class="form-control" id="filter-category" onchange="onFilterChange()">
+                    <option value="">全部分类</option>
+                    <option value="电网基建">电网基建</option>
+                    <option value="生产设备技改">生产设备技改</option>
+                    <option value="科技创新">科技创新</option>
+                    <option value="营销投入">营销投入</option>
+                    <option value="信息化建设">信息化建设</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>所属单位</label>
+                <select class="form-control" id="filter-unit" onchange="onFilterChange()">
+                    <option value="">全部单位</option>
+                    <option value="省公司本部">省公司本部</option>
+                    <option value="成都供电公司">成都供电公司</option>
+                    <option value="绵阳供电公司">绵阳供电公司</option>
+                    <option value="德阳供电公司">德阳供电公司</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>状态</label>
+                <select class="form-control" id="filter-status" onchange="onFilterChange()">
+                    <option value="">全部状态</option>
+                    <option value="draft">草稿</option>
+                    <option value="submitted">已提报</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>搜索</label>
+                <input type="text" class="form-control" id="filter-search" placeholder="项目名称..." oninput="onFilterChange()" style="min-width: 220px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据表格 -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">项目列表</h3>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-success" onclick="batchSubmit()">
+                    <i class="fas fa-paper-plane"></i> 批量提报
+                </button>
+                <button class="btn btn-sm btn-outline" onclick="exportData()">
+                    <i class="fas fa-file-export"></i> 导出
+                </button>
+            </div>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;"><input type="checkbox" id="select-all" onchange="toggleSelectAll()" title="全选"></th>
+                            <th>序号</th>
+                            <th>项目名称</th>
+                            <th>二级分类</th>
+                            <th>投资金额（万元）</th>
+                            <th>所属单位</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th style="width: 140px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+            </div>
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <i class="fas fa-inbox"></i>
+                <p>暂无匹配的项目数据</p>
+            </div>
+            <div id="pagination-container"></div>
+        </div>
+    </div>
+
+    <div id="modal-container"></div>
+    <script src="../js/page-common.js"></script>
+    <script>
+        // ========== 数据存储 ==========
+        const STORAGE_KEY = 'reserve_projects';
+        let nextId = 1;
+
+        function loadProjects() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                try { return JSON.parse(raw); } catch (e) {}
+            }
+            // 默认示例数据
+            const defaults = [
+                { id: 1, name: '川南电网新型电力系统示范工程', category: '电网基建', amount: 125000, unit: '省公司本部', status: 'draft',   createdAt: '2024-03-15 10:30' },
+                { id: 2, name: '成都500kV变电站智能化改造',       category: '生产设备技改', amount: 25000,  unit: '成都供电公司', status: 'draft',   createdAt: '2024-03-14 14:20' },
+                { id: 3, name: '智能电网调度系统研发项目',         category: '科技创新',     amount: 8000,   unit: '省公司本部', status: 'submitted', createdAt: '2024-03-10 09:00' },
+                { id: 4, name: '绵阳供电公司配电自动化升级',       category: '电网基建',     amount: 18000,  unit: '绵阳供电公司', status: 'submitted', createdAt: '2024-03-08 11:15' },
+                { id: 5, name: '德阳智慧营销服务平台建设',         category: '营销投入',     amount: 5600,   unit: '德阳供电公司', status: 'draft',   createdAt: '2024-03-12 16:45' },
+            ];
+            saveProjects(defaults);
+            return defaults;
+        }
+
+        function saveProjects(projects) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+            if (projects.length > 0) {
+                nextId = Math.max(...projects.map(p => p.id)) + 1;
+            }
+        }
+
+        let projects = loadProjects();
+
+        // ========== 统计更新 ==========
+        function updateStats() {
+            const total = projects.length;
+            const draft = projects.filter(p => p.status === 'draft').length;
+            const submitted = projects.filter(p => p.status === 'submitted').length;
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-draft').textContent = draft;
+            document.getElementById('stat-submitted').textContent = submitted;
+        }
+
+        // ========== 表格渲染 ==========
+        let currentPage = 1;
+        const pageSize = 5;
+
+        function onFilterChange() {
+            currentPage = 1;
+            renderTable();
+        }
+
+        function getFilteredProjects() {
+            const category = document.getElementById('filter-category').value;
+            const unit = document.getElementById('filter-unit').value;
+            const status = document.getElementById('filter-status').value;
+            const search = document.getElementById('filter-search').value.toLowerCase();
+            return projects.filter(p => {
+                if (category && p.category !== category) return false;
+                if (unit && p.unit !== unit) return false;
+                if (status && p.status !== status) return false;
+                if (search && !p.name.toLowerCase().includes(search)) return false;
+                return true;
+            });
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            renderTable();
+        }
+
+        function renderTable() {
+            const filtered = getFilteredProjects();
+            const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            const start = (currentPage - 1) * pageSize;
+            const pageItems = filtered.slice(start, start + pageSize);
+
+            const tbody = document.getElementById('table-body');
+            const empty = document.getElementById('empty-state');
+            const paginationEl = document.getElementById('pagination-container');
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                empty.style.display = 'block';
+                paginationEl.innerHTML = '';
+            } else {
+                empty.style.display = 'none';
+                tbody.innerHTML = pageItems.map((p, i) => {
+                    const isDraft = p.status === 'draft';
+                    return `
+                        <tr>
+                            <td>${isDraft ? `<input type="checkbox" class="row-checkbox" value="${p.id}" onchange="updateSelectAll()">` : ''}</td>
+                            <td>${start + i + 1}</td>
+                            <td>${escHtml(p.name)}</td>
+                            <td><span class="badge badge-primary">${escHtml(p.category)}</span></td>
+                            <td class="text-right">${p.amount.toLocaleString()}</td>
+                            <td>${escHtml(p.unit)}</td>
+                            <td>${isDraft
+                                ? '<span class="badge badge-warning">草稿</span>'
+                                : '<span class="badge badge-success">已提报</span>'
+                            }</td>
+                            <td>${p.createdAt}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    ${isDraft ? `<button class="icon-btn" title="提报" onclick="submitProject(${p.id})" style="color: var(--success-color); border-color: var(--success-color);">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>` : ''}
+                                    <button class="icon-btn ${isDraft ? '' : 'disabled'}" title="编辑"
+                                        ${isDraft ? `onclick="openEditModal(${p.id})"` : ''}>
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="icon-btn danger ${isDraft ? '' : 'disabled'}" title="删除"
+                                        ${isDraft ? `onclick="deleteProject(${p.id})"` : ''}>
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                paginationEl.innerHTML = renderPagination(filtered.length, pageSize, currentPage, 'goToPage');
+            }
+
+            updateStats();
+            document.getElementById('select-all').checked = false;
+        }
+
+        function escHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ========== 新增项目 ==========
+        function openAddModal() {
+            showCustomModal('新增储备项目', getFormHTML(), () => {
+                const data = readFormData();
+                if (!validateForm(data)) return false;
+                const project = {
+                    id: nextId++,
+                    ...data,
+                    status: 'draft',
+                    createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16)
+                };
+                projects.unshift(project);
+                saveProjects(projects);
+                goToPage(1);
+                return true;
+            });
+        }
+
+        // ========== 编辑项目 ==========
+        function openEditModal(id) {
+            const project = projects.find(p => p.id === id);
+            if (!project || project.status !== 'draft') return;
+            showCustomModal('编辑储备项目', getFormHTML(project), () => {
+                const data = readFormData();
+                if (!validateForm(data)) return false;
+                Object.assign(project, data);
+                saveProjects(projects);
+                goToPage(1);
+                return true;
+            });
+        }
+
+        // ========== 提报项目 ==========
+        function submitProject(id) {
+            const project = projects.find(p => p.id === id);
+            if (!project || project.status !== 'draft') return;
+            showConfirmModal('确认提报', `确定要提报项目「${project.name}」吗？提报后将无法再编辑或删除。`, () => {
+                project.status = 'submitted';
+                project.submittedAt = new Date().toISOString().replace('T', ' ').substring(0, 16);
+                saveProjects(projects);
+                goToPage(1);
+            }, '确认提报');
+        }
+
+        function batchSubmit() {
+            const checked = document.querySelectorAll('.row-checkbox:checked');
+            if (checked.length === 0) { alert('请先勾选需要提报的项目'); return; }
+            const ids = Array.from(checked).map(cb => parseInt(cb.value));
+            const names = ids.map(id => projects.find(p => p.id === id).name).join('、');
+            showConfirmModal('批量提报', `确定要提报以下 ${ids.length} 个项目吗？<br><br>${names}<br><br>提报后将无法再编辑或删除。`, () => {
+                ids.forEach(id => {
+                    const p = projects.find(p => p.id === id);
+                    if (p && p.status === 'draft') {
+                        p.status = 'submitted';
+                        p.submittedAt = new Date().toISOString().replace('T', ' ').substring(0, 16);
+                    }
+                });
+                saveProjects(projects);
+                goToPage(1);
+                document.getElementById('select-all').checked = false;
+            }, '确认提报');
+        }
+
+        function toggleSelectAll() {
+            const checked = document.getElementById('select-all').checked;
+            document.querySelectorAll('.row-checkbox').forEach(cb => { cb.checked = checked; });
+        }
+
+        function updateSelectAll() {
+            const all = document.querySelectorAll('.row-checkbox');
+            const checked = document.querySelectorAll('.row-checkbox:checked');
+            document.getElementById('select-all').checked = all.length > 0 && all.length === checked.length;
+            document.getElementById('select-all').indeterminate = checked.length > 0 && all.length !== checked.length;
+        }
+        function deleteProject(id) {
+            const project = projects.find(p => p.id === id);
+            if (!project || project.status !== 'draft') return;
+            showConfirmModal('确认删除', `确定要删除项目「${project.name}」吗？此操作不可恢复。`, () => {
+                projects = projects.filter(p => p.id !== id);
+                saveProjects(projects);
+                goToPage(1);
+            });
+        }
+
+        // ========== 导出 ==========
+        function exportData() {
+            const category = document.getElementById('filter-category').value;
+            const unit = document.getElementById('filter-unit').value;
+            const status = document.getElementById('filter-status').value;
+            const search = document.getElementById('filter-search').value.toLowerCase();
+            let filtered = projects.filter(p => {
+                if (category && p.category !== category) return false;
+                if (unit && p.unit !== unit) return false;
+                if (status && p.status !== status) return false;
+                if (search && !p.name.toLowerCase().includes(search)) return false;
+                return true;
+            });
+            const csv = '项目名称,二级分类,投资金额(万元),所属单位,状态,创建时间\n'
+                + filtered.map(p => `${p.name},${p.category},${p.amount},${p.unit},${p.status === 'draft' ? '草稿' : '已提报'},${p.createdAt}`).join('\n');
+            const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '储备项目_' + new Date().toISOString().substring(0, 10) + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ========== 表单生成 ==========
+        function getFormHTML(data) {
+            const d = data || {};
+            return `
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>项目名称 <span style="color: var(--danger-color);">*</span></label>
+                        <input class="form-control" id="form-name" value="${escAttr(d.name || '')}" placeholder="请输入项目名称">
+                    </div>
+                    <div class="form-group">
+                        <label>二级分类 <span style="color: var(--danger-color);">*</span></label>
+                        <select class="form-control" id="form-category">
+                            <option value="">请选择分类</option>
+                            ${['电网基建','生产设备技改','科技创新','营销投入','信息化建设','其他'].map(c =>
+                                `<option value="${c}" ${d.category === c ? 'selected' : ''}>${c}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>投资金额（万元） <span style="color: var(--danger-color);">*</span></label>
+                        <input class="form-control" id="form-amount" type="number" min="0" step="0.01"
+                            value="${d.amount != null ? d.amount : ''}" placeholder="请输入投资金额">
+                    </div>
+                    <div class="form-group">
+                        <label>所属单位 <span style="color: var(--danger-color);">*</span></label>
+                        <select class="form-control" id="form-unit">
+                            <option value="">请选择单位</option>
+                            ${['省公司本部','成都供电公司','绵阳供电公司','德阳供电公司','宜宾供电公司'].map(u =>
+                                `<option value="${u}" ${d.unit === u ? 'selected' : ''}>${u}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>项目描述</label>
+                        <textarea class="form-control" id="form-desc" placeholder="请输入项目描述（选填）" rows="3">${escHtml(d.desc || '')}</textarea>
+                    </div>
+                </div>
+            `;
+        }
+
+        function escAttr(str) {
+            return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function readFormData() {
+            return {
+                name: document.getElementById('form-name').value.trim(),
+                category: document.getElementById('form-category').value,
+                amount: parseFloat(document.getElementById('form-amount').value) || 0,
+                unit: document.getElementById('form-unit').value,
+                desc: document.getElementById('form-desc').value.trim(),
+            };
+        }
+
+        function validateForm(data) {
+            if (!data.name) { alert('请输入项目名称'); return false; }
+            if (!data.category) { alert('请选择二级分类'); return false; }
+            if (!data.amount || data.amount <= 0) { alert('请输入有效的投资金额'); return false; }
+            if (!data.unit) { alert('请选择所属单位'); return false; }
+            return true;
+        }
+
+        // ========== 自定义弹窗（支持回调校验） ==========
+        function showCustomModal(title, content, onSave) {
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+                <div class="modal-overlay active" id="custom-overlay">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h3 class="modal-title">${title}</h3>
+                            <button class="modal-close" onclick="closeCustomModal()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="modal-body">${content}</div>
+                        <div class="modal-footer">
+                            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                            <button class="btn btn-primary" id="custom-save-btn">保存</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('custom-save-btn').addEventListener('click', function() {
+                if (onSave()) {
+                    closeCustomModal();
+                }
+            });
+        }
+
+        function showConfirmModal(title, message, onConfirm, confirmText) {
+            confirmText = confirmText || '确认删除';
+            const btnClass = confirmText === '确认删除' ? 'btn-danger' : 'btn-success';
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+                <div class="modal-overlay active" id="confirm-overlay">
+                    <div class="modal" style="max-width: 440px;">
+                        <div class="modal-header">
+                            <h3 class="modal-title">${title}</h3>
+                            <button class="modal-close" onclick="closeCustomModal()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p style="color: var(--text-secondary); line-height: 1.8;">${message}</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                            <button class="btn ${btnClass}" id="confirm-btn">${confirmText}</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('confirm-btn').addEventListener('click', function() {
+                onConfirm();
+                closeCustomModal();
+            });
+        }
+
+        function closeCustomModal() {
+            const overlay = document.querySelector('#modal-container .modal-overlay');
+            if (overlay) {
+                overlay.classList.remove('active');
+                setTimeout(() => {
+                    document.getElementById('modal-container').innerHTML = '';
+                }, 300);
+            }
+        }
+
+        // ========== 初始渲染 ==========
+        updateStats();
+        renderTable();
+    </script>
+</body>
+</html>

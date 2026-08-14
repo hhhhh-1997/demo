@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>统一储备库</title>
+    <link rel="stylesheet" href="../css/page.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="../js/page-common.js"></script>
+</head>
+<body>
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">统一储备库</h1>
+            <p class="page-description">经过审核的储备项目，纳入统一储备库，具备计划下达条件</p>
+        </div>
+        <div class="btn-group">
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card primary"><div class="stat-info"><h3 id="stat-total">0</h3><p>储备库项目总数</p></div><div class="stat-icon"><i class="fas fa-database"></i></div></div>
+        <div class="stat-card success"><div class="stat-info"><h3 id="stat-amount">0</h3><p>总投资（万元）</p></div><div class="stat-icon"><i class="fas fa-coins"></i></div></div>
+        <div class="stat-card warning"><div class="stat-info"><h3 id="stat-issued">0</h3><p>已下达计划</p></div><div class="stat-icon"><i class="fas fa-paper-plane"></i></div></div>
+        <div class="stat-card info"><div class="stat-info"><h3 id="stat-pending">0</h3><p>待下达计划</p></div><div class="stat-icon"><i class="fas fa-clock"></i></div></div>
+    </div>
+
+    <div class="chart-grid">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">项目分类分布</h3></div>
+            <div class="card-body"><div id="chart-category" class="chart-container"></div></div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">各单位项目分布</h3></div>
+            <div class="card-body"><div id="chart-unit" class="chart-container"></div></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="filter-bar">
+            <div class="form-group">
+                <label>项目名称</label>
+                <input type="text" class="form-control" id="filter-name" placeholder="请输入项目名称" oninput="onFilterChange()">
+            </div>
+            <div class="form-group">
+                <label>二级分类</label>
+                <select class="form-control" id="filter-category" onchange="onFilterChange()">
+                    <option value="">全部</option>
+                    <option value="电网基建">电网基建</option>
+                    <option value="生产设备技改">生产设备技改</option>
+                    <option value="固定资产零购">固定资产零购</option>
+                    <option value="战新产业">战新产业</option>
+                    <option value="生产辅助">生产辅助</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>所属单位</label>
+                <select class="form-control" id="filter-unit" onchange="onFilterChange()">
+                    <option value="">全部</option>
+                    <option value="成都供电公司">成都供电公司</option>
+                    <option value="绵阳供电公司">绵阳供电公司</option>
+                    <option value="德阳供电公司">德阳供电公司</option>
+                    <option value="宜宾供电公司">宜宾供电公司</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>状态</label>
+                <select class="form-control" id="filter-status" onchange="onFilterChange()">
+                    <option value="">全部</option>
+                    <option value="待下达">待下达</option>
+                    <option value="已下达">已下达</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">项目列表</h3>
+            <button class="btn btn-sm btn-outline" onclick="exportCsv()"><i class="fas fa-download"></i> 导出</button>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>项目编码</th>
+                            <th>项目名称</th>
+                            <th>二级分类</th>
+                            <th>投资金额（万元）</th>
+                            <th>所属单位</th>
+                            <th>入库时间</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+            </div>
+          <div id="pagination-container"></div>
+        </div>
+    </div>
+
+    <div id="modal-container"></div>
+
+    <script>
+        const reserveLib = [
+            { code: 'XM202401001', name: '川南电网改造升级工程', category: '电网基建', amount: 5200, unit: '成都供电公司', entryDate: '2024-01-15', status: '待下达', content: '对川南地区电网进行升级改造，提升供电能力和可靠性' },
+            { code: 'XM202401002', name: '变电站设备技术改造', category: '生产设备技改', amount: 3800, unit: '绵阳供电公司', entryDate: '2024-01-14', status: '已下达', content: '对老旧变电站进行设备技术改造', issueTime: '2024-03-01 10:00' },
+            { code: 'XM202401003', name: '新能源充电桩建设项目', category: '电网基建', amount: 2100, unit: '德阳供电公司', entryDate: '2024-01-13', status: '已下达', content: '建设新能源充电桩基础设施', issueTime: '2024-03-02 14:30' },
+            { code: 'XM202401004', name: '配网自动化建设', category: '电网基建', amount: 1800, unit: '宜宾供电公司', entryDate: '2024-01-12', status: '待下达', content: '推进配电网自动化水平提升' },
+            { code: 'XM202401005', name: '智能变电站示范工程', category: '电网基建', amount: 8500, unit: '成都供电公司', entryDate: '2024-01-11', status: '已下达', content: '建设新一代智能变电站示范工程', issueTime: '2024-03-01 09:00' },
+            { code: 'XM202401006', name: '生产辅助系统升级', category: '生产辅助', amount: 1200, unit: '绵阳供电公司', entryDate: '2024-01-10', status: '待下达', content: '升级生产辅助管理系统' },
+            { code: 'XM202401007', name: '战略性新兴产业孵化', category: '战新产业', amount: 6000, unit: '成都供电公司', entryDate: '2024-01-09', status: '已下达', content: '孵化战略性新兴产业项目', issueTime: '2024-03-03 11:00' },
+            { code: 'XM202401008', name: '固定资产零购项目', category: '固定资产零购', amount: 800, unit: '德阳供电公司', entryDate: '2024-01-08', status: '待下达', content: '固定资产零购补充项目' },
+            { code: 'XM202401009', name: '老旧线路改造工程', category: '电网基建', amount: 4500, unit: '宜宾供电公司', entryDate: '2024-01-07', status: '已下达', content: '对老旧输电线路进行全面改造', issueTime: '2024-03-04 08:00' },
+            { code: 'XM202401010', name: '电力营销系统建设', category: '生产辅助', amount: 3200, unit: '成都供电公司', entryDate: '2024-01-06', status: '待下达', content: '建设智能化电力营销系统' },
+        ];
+
+        let currentPage = 1;
+        const pageSize = 5;
+
+        function updateStats() {
+            const total = reserveLib.length;
+            const issued = reserveLib.filter(p => p.status === '已下达').length;
+            const pending = reserveLib.filter(p => p.status === '待下达').length;
+            const totalAmount = reserveLib.reduce((sum, p) => sum + p.amount, 0) / 10000;
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-amount').textContent = totalAmount.toFixed(1);
+            document.getElementById('stat-issued').textContent = issued;
+            document.getElementById('stat-pending').textContent = pending;
+        }
+
+        function onFilterChange() { currentPage = 1; renderTable(); }
+        function goToPage(p) { currentPage = p; renderTable(); }
+
+        function renderTable() {
+            const nameFilter = document.getElementById('filter-name').value.toLowerCase();
+            const categoryFilter = document.getElementById('filter-category').value;
+            const unitFilter = document.getElementById('filter-unit').value;
+            const statusFilter = document.getElementById('filter-status').value;
+            let filtered = reserveLib.filter(p => {
+                if (nameFilter && !p.name.toLowerCase().includes(nameFilter)) return false;
+                if (categoryFilter && p.category !== categoryFilter) return false;
+                if (unitFilter && p.unit !== unitFilter) return false;
+                if (statusFilter && p.status !== statusFilter) return false;
+                return true;
+            });
+            const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            const start = (currentPage - 1) * pageSize;
+            const pageItems = filtered.slice(start, start + pageSize);
+            document.getElementById('table-body').innerHTML = pageItems.map(p => {
+                const canIssue = p.status === '待下达';
+                return '<tr>' +
+                    '<td>' + p.code + '</td>' +
+                    '<td>' + p.name + '</td>' +
+                    '<td><span class="badge badge-primary">' + p.category + '</span></td>' +
+                    '<td class="text-right">' + p.amount.toLocaleString() + '</td>' +
+                    '<td>' + p.unit + '</td>' +
+                    '<td>' + p.entryDate + '</td>' +
+                    '<td>' + (p.status === '已下达' ? '<span class="badge badge-success">已下达</span>' : '<span class="badge badge-warning">待下达</span>') + '</td>' +
+                    '<td><div class="action-buttons">' +
+                        (canIssue ? '<button class="icon-btn" onclick="issueProject(\'' + p.code + '\')" title="下达" style="color:var(--success-color);border-color:var(--success-color);"><i class="fas fa-paper-plane"></i></button>' : '') +
+                        '<button class="icon-btn" onclick="viewDetail(\'' + p.code + '\',\'' + p.name.replace(/'/g, "\\'") + '\')"><i class="fas fa-eye"></i></button>' +
+                    '</div></td>' +
+                '</tr>';
+            }).join('');
+            document.getElementById('pagination-container').innerHTML = renderPagination(filtered.length, pageSize, currentPage, 'goToPage');
+            updateStats();
+        }
+
+        // ========== 下达操作 ==========
+        function issueProject(code) {
+            const p = reserveLib.find(x => x.code === code);
+            if (!p || p.status !== '待下达') return;
+            if (confirm('确定要下达项目「' + p.name + '」吗？')) {
+                p.status = '已下达';
+                p.issueTime = new Date().toISOString().replace('T', ' ').substring(0, 16);
+                goToPage(1);
+            }
+        }
+
+        function viewDetail(code, name) {
+            const p = reserveLib.find(x => x.code === code) || {};
+            const statusHtml = p.status === '已下达' ? '<span class="badge badge-success">已下达</span>' : '<span class="badge badge-warning">待下达</span>';
+            showModal('项目详情', '<div class="form-grid" style="grid-template-columns:1fr 1fr;">' +
+                field('项目编码', code) +
+                field('项目名称', name) +
+                field('二级分类', '<span class="badge badge-primary">' + p.category + '</span>') +
+                field('投资金额', (p.amount || 0).toLocaleString() + '万元') +
+                field('所属单位', p.unit) +
+                field('入库时间', p.entryDate) +
+                field('状态', statusHtml) +
+                field('论证状态', '<span class="badge badge-success">通过</span>') +
+                '<div class="form-group" style="grid-column:1/-1;"><label>项目内容</label><div style="padding:10px;background:var(--bg-secondary);border-radius:8px;min-height:40px;">' + (p.content || '—') + '</div></div>' +
+                field('审核状态', '<span class="badge badge-success">通过</span>') +
+                field('下达时间', p.issueTime || '—') +
+            '</div>', true);
+        }
+
+        function field(label, value) {
+            return '<div class="form-group" style="flex-direction:row;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border-color);">' +
+                '<label style="white-space:nowrap;min-width:70px;margin-bottom:0;">' + label + '</label>' +
+                '<span style="color:var(--text-primary);">' + value + '</span>' +
+            '</div>';
+        }
+
+        function exportCsv() {
+            const csv = '项目编码,项目名称,二级分类,投资金额(万元),所属单位,入库时间,状态\n'
+                + reserveLib.map(p => [p.code, p.name, p.category, p.amount, p.unit, p.entryDate, p.status].join(',')).join('\n');
+            const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = '统一储备库_' + new Date().toISOString().substring(0, 10) + '.csv'; a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ========== ECharts ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            updateStats();
+            renderTable();
+        });
+
+        function initCharts() {
+            var categoryChart = echarts.init(document.getElementById('chart-category'));
+            var unitChart = echarts.init(document.getElementById('chart-unit'));
+            categoryChart.setOption({
+                tooltip: { trigger: 'item' },
+                legend: { top: '5%', left: 'center', textStyle: { color: '#a0a0b0' } },
+                series: [{
+                    name: '项目分类', type: 'pie', radius: ['40%', '70%'], avoidLabelOverlap: false,
+                    itemStyle: { borderColor: 'transparent', borderWidth: 0 },
+                    label: { show: false },
+                    emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
+                    data: [
+                        { value: 280, name: '电网基建', itemStyle: { color: '#1e88e5' } },
+                        { value: 220, name: '生产设备技改', itemStyle: { color: '#43a047' } },
+                        { value: 180, name: '战新产业', itemStyle: { color: '#fb8c00' } },
+                        { value: 120, name: '生产辅助', itemStyle: { color: '#00acc1' } },
+                        { value: 100, name: '固定资产零购', itemStyle: { color: '#8e24aa' } }
+                    ]
+                }]
+            });
+            unitChart.setOption({
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'category', data: ['成都', '绵阳', '德阳', '宜宾', '泸州', '乐山'], axisLabel: { color: '#a0a0b0' } },
+                yAxis: { type: 'value', axisLabel: { color: '#a0a0b0' } },
+                series: [{ name: '项目数', type: 'bar', data: [185, 165, 145, 135, 125, 145], itemStyle: { color: '#1e88e5' } }]
+            });
+            window.addEventListener('resize', function() { categoryChart.resize(); unitChart.resize(); });
+        }
+    </script>
+</body>
+</html>

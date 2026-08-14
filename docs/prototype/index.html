@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>综合计划储备项目管理</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部导航栏 -->
+        <header class="top-header">
+            <div class="logo-section">
+                <i class="fas fa-warehouse"></i>
+                <span class="logo-text">综合计划储备项目管理</span>
+            </div>
+            <div class="header-actions">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="搜索功能...">
+                </div>
+                <div class="notification-icon">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge">3</span>
+                </div>
+                <div class="theme-toggle" onclick="toggleTheme()" title="切换主题">
+                    <i class="fas fa-moon"></i>
+                </div>
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span>管理员</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <!-- 侧边栏菜单 -->
+            <aside class="sidebar">
+                <nav class="sidebar-nav">
+                    <!-- 综合计划储备项目管理 -->
+                    <div class="menu-group">
+                        <div class="menu-group-title expanded" onclick="toggleMenu(this)">
+                            <i class="fas fa-project-diagram"></i>
+                            <span>综合计划储备项目管理</span>
+                            <i class="fas fa-chevron-right arrow"></i>
+                        </div>
+                        <div class="submenu open">
+                            <div class="submenu-item active" data-page="pages/project-pull.html">储备项目维护</div>
+                            <div class="submenu-item" data-page="pages/project-review.html">储备项目论证</div>
+                            <div class="submenu-item" data-page="pages/project-audit.html">储备项目审核</div>
+                            <div class="submenu-item" data-page="pages/unified-reserve.html">统一储备库</div>
+                        </div>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- 主内容区域 - 使用iframe加载各页面 -->
+            <main class="main-content">
+                <iframe id="page-iframe" src="pages/project-pull.html" frameborder="0"></iframe>
+            </main>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

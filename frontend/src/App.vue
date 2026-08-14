@@ -5,16 +5,16 @@ const count = ref(0)
 </script>
 
 <template>
-  <n-config-provider>
+  <el-config-provider>
     <div class="app">
       <h1>Demo Frontend</h1>
-      <p>Vue 3 + TypeScript + Vite + Naive UI</p>
-      <n-space>
-        <n-button type="primary" @click="count++">count is {{ count }}</n-button>
-        <n-button>Default</n-button>
-      </n-space>
+      <p>Vue 3 + TypeScript + Vite + Element Plus</p>
+      <el-space>
+        <el-button type="primary" @click="count++">count is {{ count }}</el-button>
+        <el-button>Default</el-button>
+      </el-space>
     </div>
-  </n-config-provider>
+  </el-config-provider>
 </template>
 
 <style scoped>

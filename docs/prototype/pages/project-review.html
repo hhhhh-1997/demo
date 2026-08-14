@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>储备项目论证</title>
+    <link rel="stylesheet" href="../css/page.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="../js/page-common.js"></script>
+    <style>
+        .review-option { display: flex; gap: 24px; margin-top: 8px; }
+        .review-option label { display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-primary); font-size: 14px; }
+        .review-option input[type="radio"] { accent-color: var(--primary-color); }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">储备项目论证</h1>
+            <p class="page-description">对储备项目开展储备监督检查，逐项进行论证分析</p>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-info"><h3 id="stat-pending">0</h3><p>待论证项目</p></div>
+            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-info"><h3 id="stat-passed">0</h3><p>已通过论证</p></div>
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+        </div>
+        <div class="stat-card danger">
+            <div class="stat-info"><h3 id="stat-failed">0</h3><p>论证不通过</p></div>
+            <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-info"><h3 id="stat-rate">0%</h3><p>论证通过率</p></div>
+            <div class="stat-icon"><i class="fas fa-chart-pie"></i></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="filter-bar">
+            <div class="form-group">
+                <label>项目名称</label>
+                <input type="text" class="form-control" id="filter-name" placeholder="请输入项目名称" oninput="onFilterChange()">
+            </div>
+            <div class="form-group">
+                <label>二级分类</label>
+                <select class="form-control" id="filter-category" onchange="onFilterChange()">
+                    <option value="">全部</option>
+                    <option value="电网基建">电网基建</option>
+                    <option value="生产设备技改">生产设备技改</option>
+                    <option value="固定资产零购">固定资产零购</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>论证状态</label>
+                <select class="form-control" id="filter-status" onchange="onFilterChange()">
+                    <option value="">全部</option>
+                    <option value="待论证">待论证</option>
+                    <option value="已通过">已通过</option>
+                    <option value="不通过">不通过</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">项目列表</h3>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>项目编码</th>
+                            <th>项目名称</th>
+                            <th>信息完整性</th>
+                            <th>三重一大</th>
+                            <th>拆分立项</th>
+                            <th>界面混淆</th>
+                            <th>论证状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+            </div>
+            <div id="pagination-container"></div>
+        </div>
+    </div>
+
+    <div id="modal-container"></div>
+
+    <script>
+        // ========== 数据 ==========
+        const reviewProjects = [
+            { code: 'XM202401001', name: '川南电网改造升级工程', category: '电网基建', infoComplete: '完整', threeImportant: '符合', splitProject: '无', interfaceConfusion: '无', status: '待论证', hasIssues: false, reviewOpinion: '', reviewTime: '' },
+            { code: 'XM202401002', name: '变电站设备技术改造', category: '生产设备技改', infoComplete: '完整', threeImportant: '符合', splitProject: '无', interfaceConfusion: '无', status: '已通过', hasIssues: false, reviewOpinion: '项目信息完整，符合要求，建议通过', reviewTime: '2024-01-15 09:30' },
+            { code: 'XM202401003', name: '新能源充电桩建设项目', category: '电网基建', infoComplete: '不完整', threeImportant: '符合', splitProject: '存在', interfaceConfusion: '无', status: '不通过', hasIssues: true, reviewOpinion: '信息不完整且存在拆分立项问题，不予通过', reviewTime: '2024-01-15 10:00' },
+            { code: 'XM202401004', name: '智能配电网升级工程', category: '电网基建', infoComplete: '完整', threeImportant: '不符合', splitProject: '无', interfaceConfusion: '存在', status: '待论证', hasIssues: true, reviewOpinion: '', reviewTime: '' },
+            { code: 'XM202401005', name: '变电站自动化改造', category: '生产设备技改', infoComplete: '完整', threeImportant: '符合', splitProject: '无', interfaceConfusion: '无', status: '已通过', hasIssues: false, reviewOpinion: '论证通过，建议纳入储备库', reviewTime: '2024-01-14 16:00' },
+            { code: 'XM202401006', name: '储能电站建设项目', category: '固定资产零购', infoComplete: '完整', threeImportant: '符合', splitProject: '无', interfaceConfusion: '无', status: '待论证', hasIssues: false, reviewOpinion: '', reviewTime: '' },
+            { code: 'XM202401007', name: '配网自动化终端更新', category: '生产设备技改', infoComplete: '不完整', threeImportant: '符合', splitProject: '无', interfaceConfusion: '无', status: '不通过', hasIssues: true, reviewOpinion: '信息不完整，退回补充材料', reviewTime: '2024-01-14 14:00' },
+            { code: 'XM202401008', name: '新能源并网工程', category: '电网基建', infoComplete: '完整', threeImportant: '符合', splitProject: '无', interfaceConfusion: '无', status: '已通过', hasIssues: false, reviewOpinion: '条件成熟，推荐入库', reviewTime: '2024-01-13 11:00' },
+        ];
+
+        let currentPage = 1;
+        const pageSize = 5;
+
+        function updateStats() {
+            document.getElementById('stat-pending').textContent = reviewProjects.filter(p => p.status === '待论证').length;
+            document.getElementById('stat-passed').textContent = reviewProjects.filter(p => p.status === '已通过').length;
+            document.getElementById('stat-failed').textContent = reviewProjects.filter(p => p.status === '不通过').length;
+            var reviewed = reviewProjects.filter(p => p.status !== '待论证').length;
+            var passRate = reviewed > 0 ? (reviewProjects.filter(p => p.status === '已通过').length / reviewed * 100).toFixed(1) : '0.0';
+            document.getElementById('stat-rate').textContent = passRate + '%';
+        }
+
+        function onFilterChange() { currentPage = 1; renderTable(); }
+        function goToPage(p) { currentPage = p; renderTable(); }
+
+        function renderTable() {
+            const nameFilter = document.getElementById('filter-name').value.toLowerCase();
+            const categoryFilter = document.getElementById('filter-category').value;
+            const statusFilter = document.getElementById('filter-status').value;
+            let filtered = reviewProjects.filter(p => {
+                if (nameFilter && !p.name.toLowerCase().includes(nameFilter)) return false;
+                if (categoryFilter && p.category !== categoryFilter) return false;
+                if (statusFilter && p.status !== statusFilter) return false;
+                return true;
+            });
+            const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            const start = (currentPage - 1) * pageSize;
+            const pageItems = filtered.slice(start, start + pageSize);
+            document.getElementById('table-body').innerHTML = pageItems.map(p => {
+                const canReview = p.status === '待论证';
+                return '<tr>' +
+                    '<td>' + p.code + '</td>' +
+                    '<td>' + p.name + '</td>' +
+                    '<td>' + badge(p.infoComplete === '完整' ? 'success' : 'warning', p.infoComplete) + '</td>' +
+                    '<td>' + badge(p.threeImportant === '符合' ? 'success' : 'danger', p.threeImportant) + '</td>' +
+                    '<td>' + badge(p.splitProject === '无' ? 'success' : 'danger', p.splitProject) + '</td>' +
+                    '<td>' + badge(p.interfaceConfusion === '无' ? 'success' : 'danger', p.interfaceConfusion) + '</td>' +
+                    '<td>' + badge(p.status === '已通过' ? 'success' : p.status === '不通过' ? 'danger' : 'warning', p.status) + '</td>' +
+                    '<td><div class="action-buttons">' +
+                        (canReview ? '<button class="icon-btn" onclick="openReviewModal(\'' + p.code + '\',\'' + p.name.replace(/'/g, "\\'") + '\')" title="论证"><i class="fas fa-check-circle"></i></button>' : '') +
+                        '<button class="icon-btn" onclick="viewDetail(\'' + p.code + '\',\'' + p.name.replace(/'/g, "\\'") + '\')"><i class="fas fa-eye"></i></button>' +
+                    '</div></td>' +
+                '</tr>';
+            }).join('');
+            document.getElementById('pagination-container').innerHTML = renderPagination(filtered.length, pageSize, currentPage, 'goToPage');
+            updateStats();
+        }
+
+        function badge(cls, text) { return '<span class="badge badge-' + cls + '">' + text + '</span>'; }
+
+        // ========== 论证弹窗 ==========
+        function openReviewModal(code, name) {
+            const p = reviewProjects.find(x => x.code === code);
+            if (!p || p.status !== '待论证') return;
+            showCustomModal('项目论证', getReviewFormHTML(p), function() {
+                const infoComplete = document.querySelector('input[name="rv-info-complete"]:checked');
+                const threeImportant = document.querySelector('input[name="rv-three-important"]:checked');
+                const splitProject = document.querySelector('input[name="rv-split-project"]:checked');
+                const interfaceConfusion = document.querySelector('input[name="rv-interface-confusion"]:checked');
+                const opinion = document.getElementById('rv-opinion').value.trim();
+                const result = document.getElementById('rv-result').value;
+                if (!result || result === '请选择') { alert('请选择论证结果'); return false; }
+                p.infoComplete = infoComplete ? infoComplete.value : '完整';
+                p.threeImportant = threeImportant ? threeImportant.value : '符合';
+                p.splitProject = splitProject ? splitProject.value : '无';
+                p.interfaceConfusion = interfaceConfusion ? interfaceConfusion.value : '无';
+                p.hasIssues = p.infoComplete === '不完整' || p.threeImportant === '不符合' || p.splitProject === '存在' || p.interfaceConfusion === '存在';
+                p.reviewOpinion = opinion;
+                p.status = result;
+                p.reviewTime = new Date().toISOString().replace('T', ' ').substring(0, 16);
+                goToPage(1);
+                return true;
+            });
+        }
+
+        function getReviewFormHTML(p) {
+            return '<div class="form-grid" style="grid-template-columns:1fr 1fr;">' +
+                field('项目编码', p.code) +
+                field('项目名称', p.name) +
+                '<hr style="grid-column:1/-1;border:1px solid var(--border-color);margin:8px 0;">' +
+                '<h4 style="grid-column:1/-1;color:var(--text-primary);margin-bottom:4px;">论证检查项</h4>' +
+                checkItem('info-complete', '信息完整性', '完整', '不完整', p.infoComplete) +
+                checkItem('three-important', '三重一大', '符合', '不符合', p.threeImportant) +
+                checkItem('split-project', '拆分立项', '无', '存在', p.splitProject) +
+                checkItem('interface-confusion', '界面混淆', '无', '存在', p.interfaceConfusion) +
+                '<div class="form-group" style="grid-column:1/-1;"><label>论证意见</label><textarea class="form-control" id="rv-opinion" placeholder="请输入论证意见" rows="3">' + escHtml(p.reviewOpinion || '') + '</textarea></div>' +
+                '<div class="form-group" style="grid-column:1/-1;"><label>论证结果 <span style="color:var(--danger-color);">*</span></label><select class="form-control" id="rv-result"><option value="请选择">请选择</option><option value="已通过"' + (p.status === '已通过' ? ' selected' : '') + '>通过</option><option value="不通过"' + (p.status === '不通过' ? ' selected' : '') + '>不通过</option></select></div>' +
+            '</div>';
+        }
+
+        function checkItem(name, label, optA, optB, current) {
+            return '<div class="form-group" style="flex-direction:row;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-color);">' +
+                '<label style="white-space:nowrap;min-width:70px;margin-bottom:0;">' + label + '</label>' +
+                '<div class="review-option">' +
+                    '<label><input type="radio" name="rv-' + name + '" value="' + optA + '"' + (current === optA ? ' checked' : '') + '> ' + optA + '</label>' +
+                    '<label><input type="radio" name="rv-' + name + '" value="' + optB + '"' + (current === optB ? ' checked' : '') + '> ' + optB + '</label>' +
+                '</div></div>';
+        }
+
+        // ========== 详情弹窗 ==========
+        function viewDetail(code, name) {
+            const p = reviewProjects.find(x => x.code === code) || {};
+            const st = p.status === '已通过' ? 'success' : p.status === '不通过' ? 'danger' : 'warning';
+            showModal('论证详情',
+                '<div class="form-grid" style="grid-template-columns: 1fr 1fr;">' +
+                field('项目编码', code) +
+                field('项目名称', name) +
+                field('信息完整性', badge(p.infoComplete === '完整' ? 'success' : 'warning', p.infoComplete)) +
+                field('三重一大', badge(p.threeImportant === '符合' ? 'success' : 'danger', p.threeImportant)) +
+                field('拆分立项', badge(p.splitProject === '无' ? 'success' : 'danger', p.splitProject)) +
+                field('界面混淆', badge(p.interfaceConfusion === '无' ? 'success' : 'danger', p.interfaceConfusion)) +
+                field('论证状态', '<span class="badge badge-' + st + '">' + p.status + '</span>') +
+                field('论证时间', p.reviewTime || '—') +
+                '<div class="form-group" style="grid-column:1/-1;"><label>论证意见</label><div style="padding:10px;background:var(--bg-secondary);border-radius:8px;min-height:60px;">' + (p.reviewOpinion || '—') + '</div></div>' +
+                '</div>'
+            , true);
+        }
+
+        // ========== 自定义弹窗 ==========
+        function showCustomModal(title, content, onSave) {
+            const container = document.getElementById('modal-container');
+            container.innerHTML =
+                '<div class="modal-overlay active" id="custom-overlay">' +
+                    '<div class="modal">' +
+                        '<div class="modal-header">' +
+                            '<h3 class="modal-title">' + title + '</h3>' +
+                            '<button class="modal-close" onclick="closeCustomModal()"><i class="fas fa-times"></i></button>' +
+                        '</div>' +
+                        '<div class="modal-body">' + content + '</div>' +
+                        '<div class="modal-footer">' +
+                            '<button class="btn btn-outline" onclick="closeCustomModal()">取消</button>' +
+                            '<button class="btn btn-primary" id="custom-save-btn">提交论证</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            document.getElementById('custom-save-btn').addEventListener('click', function() {
+                if (onSave()) closeCustomModal();
+            });
+        }
+
+        function closeCustomModal() {
+            const overlay = document.querySelector('#modal-container .modal-overlay');
+            if (overlay) {
+                overlay.classList.remove('active');
+                setTimeout(function() { document.getElementById('modal-container').innerHTML = ''; }, 300);
+            }
+        }
+
+        function escHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function field(label, value) {
+            return '<div class="form-group" style="flex-direction:row;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border-color);">' +
+                '<label style="white-space:nowrap;min-width:70px;margin-bottom:0;">' + label + '</label>' +
+                '<span style="color:var(--text-primary);">' + value + '</span>' +
+            '</div>';
+        }
+
+        updateStats();
+        renderTable();
+    </script>
+</body>
+</html>
