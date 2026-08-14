@@ -43,7 +43,7 @@ public class AuthController {
         if (user == null || !encoder.matches(body.getPassword(), user.getPassword())) {
             throw new BusinessException(400, "用户名或密码错误");
         }
-        if (user.getStatus() != null && user.getStatus() == 0) {
+        if (Integer.valueOf(0).equals(user.getStatus())) {
             throw new BusinessException(403, "账号已被停用");
         }
         StpUtil.login(user.getId());
@@ -67,6 +67,9 @@ public class AuthController {
     public Result<LoginUser> me() {
         long userId = StpUtil.getLoginIdAsLong();
         SysUser user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(401, "用户不存在或已删除");
+        }
         LoginUser lu = new LoginUser();
         lu.setUserId(userId);
         lu.setUsername(user.getUsername());

@@ -574,7 +574,7 @@ public class ProjectService {
     }
 
     private Map<Long, String> deptNameMap() {
-        return deptMapper.selectList(null).stream()
+        return deptMapper.selectList(new LambdaQueryWrapper<SysDept>().eq(SysDept::getStatus, 1)).stream()
                 .collect(Collectors.toMap(SysDept::getId, SysDept::getDeptName, (a, b) -> a));
     }
 

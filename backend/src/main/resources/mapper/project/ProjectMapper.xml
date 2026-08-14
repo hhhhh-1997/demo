@@ -19,7 +19,7 @@
         FROM project p
         LEFT JOIN sys_dept d ON p.dept_id = d.id
         WHERE p.status IN (#{status1}, #{status2})
-        GROUP BY d.dept_name
+        GROUP BY d.id, d.dept_name
     </select>
 
     <select id="sumInvestmentAmount" resultType="java.math.BigDecimal">

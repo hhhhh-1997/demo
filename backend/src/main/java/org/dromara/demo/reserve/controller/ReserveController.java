@@ -1,6 +1,7 @@
 package org.dromara.demo.reserve.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.dromara.demo.common.PageResult;
 import org.dromara.demo.common.Result;
 import org.dromara.demo.project.domain.Project;
@@ -69,7 +70,8 @@ public class ReserveController {
     @GetMapping("/export")
     public ResponseEntity<byte[]> export(ProjectQuery q) {
         List<Project> list = projectService.reserveExportList(q);
-        Map<Long, String> deptNames = deptMapper.selectList(null).stream()
+        Map<Long, String> deptNames = deptMapper.selectList(
+                        new LambdaQueryWrapper<SysDept>().eq(SysDept::getStatus, 1)).stream()
                 .collect(Collectors.toMap(SysDept::getId, SysDept::getDeptName, (a, b) -> a));
         String csv = toCsv(list, deptNames);
         byte[] bytes = ("﻿" + csv).getBytes(StandardCharsets.UTF_8);
