@@ -34,7 +34,7 @@ class PerformanceServiceTest {
         String sql = w.getSqlSegment();
         assertTrue(sql.contains("top_dept_id"));
         assertTrue(sql.contains("role"));
-        assertTrue(sql.contains("month"));
+        assertTrue(sql.contains("month ="));
     }
 
     @Test
@@ -43,7 +43,7 @@ class PerformanceServiceTest {
         q.setMonth("2026-05");
         QueryWrapper<Performance> w = service.buildWrapper(q);
         String sql = w.getSqlSegment();
-        assertTrue(sql.contains("month"));
+        assertTrue(sql.contains("month ="));
         assertFalse(sql.contains("STR_TO_DATE"));
         assertFalse(sql.contains("DATE("));
     }
