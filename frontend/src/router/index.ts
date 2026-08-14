@@ -23,7 +23,9 @@ const router = createRouter({
     },
     {
       path: '/',
-      redirect: '/login',
+      name: 'Home',
+      component: () => import('../views/home/index.vue'),
+      meta: { title: '首页', requiresAuth: true },
     },
   ],
 })
@@ -34,6 +36,12 @@ router.beforeEach((to) => {
 
   if (to.meta.requiresAuth && !hasToken) {
     return { path: '/login', query: { redirect: to.fullPath } }
+  }
+  if (to.meta.permissions && to.meta.permissions.length > 0) {
+    const allowed = to.meta.permissions.some((perm) => userStore.hasPermi(perm))
+    if (!allowed) {
+      return { path: '/' }
+    }
   }
   if (to.path === '/login' && hasToken) {
     return { path: '/' }
