@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 系统菜单。
@@ -29,6 +30,9 @@ public class SysMenu {
     private Integer sort;
     private Integer visible;
     private Integer status;
+
+    @TableField(exist = false)
+    private List<SysMenu> children;
 
     @TableField(fill = FieldFill.INSERT)
     private Long createBy;
@@ -64,6 +68,8 @@ public class SysMenu {
     public void setVisible(Integer visible) { this.visible = visible; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
+    public List<SysMenu> getChildren() { return children; }
+    public void setChildren(List<SysMenu> children) { this.children = children; }
     public Long getCreateBy() { return createBy; }
     public void setCreateBy(Long createBy) { this.createBy = createBy; }
     public LocalDateTime getCreateTime() { return createTime; }

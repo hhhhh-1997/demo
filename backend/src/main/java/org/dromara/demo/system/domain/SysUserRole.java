@@ -1,32 +1,22 @@
 package org.dromara.demo.system.domain;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
- * 系统部门。
+ * 用户-角色关联。
  *
  * @author demo
  * @since 2026-08-14
  */
-@TableName("sys_dept")
-public class SysDept {
+@TableName("sys_user_role")
+public class SysUserRole {
 
-    @TableId(type = IdType.AUTO)
-    private Long id;
-    private String deptName;
-    private Long parentId;
-    private Integer sort;
-    private Integer status;
-
-    @TableField(exist = false)
-    private List<SysDept> children;
+    private Long userId;
+    private Long roleId;
 
     @TableField(fill = FieldFill.INSERT)
     private Long createBy;
@@ -40,18 +30,10 @@ public class SysDept {
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getDeptName() { return deptName; }
-    public void setDeptName(String deptName) { this.deptName = deptName; }
-    public Long getParentId() { return parentId; }
-    public void setParentId(Long parentId) { this.parentId = parentId; }
-    public Integer getSort() { return sort; }
-    public void setSort(Integer sort) { this.sort = sort; }
-    public Integer getStatus() { return status; }
-    public void setStatus(Integer status) { this.status = status; }
-    public List<SysDept> getChildren() { return children; }
-    public void setChildren(List<SysDept> children) { this.children = children; }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+    public Long getRoleId() { return roleId; }
+    public void setRoleId(Long roleId) { this.roleId = roleId; }
     public Long getCreateBy() { return createBy; }
     public void setCreateBy(Long createBy) { this.createBy = createBy; }
     public LocalDateTime getCreateTime() { return createTime; }
