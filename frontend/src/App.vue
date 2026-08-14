@@ -6,6 +6,7 @@ import AgeAnalysis from './components/AgeAnalysis.vue'
 import UnitAnalysis from './components/UnitAnalysis.vue'
 import ScoreDistribution from './components/ScoreDistribution.vue'
 import AiAssistant from './components/AiAssistant.vue'
+import LlmConfig from './components/LlmConfig.vue'
 
 const { theme, toggle } = useTheme()
 
@@ -41,12 +42,11 @@ const current = ref<(typeof pages)[number]['key']>('overview')
   </nav>
 
   <main class="content">
-    <!-- Task 12–17 逐板块替换为真实组件 -->
     <Overview v-if="current === 'overview'" />
     <AgeAnalysis v-else-if="current === 'age'" />
     <UnitAnalysis v-else-if="current === 'unit'" />
     <ScoreDistribution v-else-if="current === 'score'" />
     <AiAssistant v-else-if="current === 'ai'" />
-    <div v-else-if="current === 'model'">大模型管理（待实现）</div>
+    <LlmConfig v-else-if="current === 'model'" />
   </main>
 </template>
