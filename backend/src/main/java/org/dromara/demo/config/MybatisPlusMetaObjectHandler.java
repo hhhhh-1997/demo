@@ -33,10 +33,7 @@ public class MybatisPlusMetaObjectHandler implements MetaObjectHandler {
     }
 
     private Long currentUserId() {
-        try {
-            return StpUtil.getLoginIdAsLong();
-        } catch (Exception e) {
-            return null;
-        }
+        Object loginId = StpUtil.getLoginIdDefaultNull();
+        return loginId == null ? null : Long.valueOf(loginId.toString());
     }
 }
