@@ -67,5 +67,5 @@ INSERT INTO sys_role_menu (role_id, menu_id) VALUES
 
 -- 管理员用户（password 为 BCrypt("123456")，见 Task 4 生成后回填）
 INSERT INTO sys_user (id, username, password, nickname, dept_id, create_by) VALUES
- (1,'admin','<BCRYPT_123456>','系统管理员',1,1);
+ (1,'admin','$2a$10$4JXwnETgUq5HQ5hCtAQ/HuEasFzSbw2Ekj6K1pO1gG.lwqZ/YfFcq','系统管理员',1,1);
 INSERT INTO sys_user_role (user_id, role_id) VALUES (1,1);
