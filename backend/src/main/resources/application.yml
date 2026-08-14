@@ -40,3 +40,10 @@ minio:
   access-key: ruoyi
   secret-key: ruoyi123
   bucket: ruoyi
+
+sa-token:
+  token-name: Authorization
+  timeout: 86400
+  is-read-cookie: false
+  is-read-body: false
+  is-log: false
