@@ -312,6 +312,8 @@ async function handleSave(): Promise<void> {
     dialogVisible.value = false
     currentPage.value = 1
     await refresh()
+  } catch {
+    // 拦截器已统一提示，此处不重复处理。
   } finally {
     saving.value = false
   }
@@ -353,10 +355,14 @@ async function handleSubmit(row: ProjectVO): Promise<void> {
   if (!ok) {
     return
   }
-  await submitProject(row.id)
-  ElMessage.success('提报成功')
-  currentPage.value = 1
-  await refresh()
+  try {
+    await submitProject(row.id)
+    ElMessage.success('提报成功')
+    currentPage.value = 1
+    await refresh()
+  } catch {
+    // 拦截器已统一提示，此处不重复处理。
+  }
 }
 
 /** 批量提报。 */
@@ -370,10 +376,14 @@ async function handleBatchSubmit(): Promise<void> {
   if (!ok) {
     return
   }
-  await submitBatchProject(selectedRows.value.map((p) => p.id))
-  ElMessage.success('批量提报成功')
-  currentPage.value = 1
-  await refresh()
+  try {
+    await submitBatchProject(selectedRows.value.map((p) => p.id))
+    ElMessage.success('批量提报成功')
+    currentPage.value = 1
+    await refresh()
+  } catch {
+    // 拦截器已统一提示，此处不重复处理。
+  }
 }
 
 /** 删除项目。 */
@@ -382,15 +392,23 @@ async function handleDelete(row: ProjectVO): Promise<void> {
   if (!ok) {
     return
   }
-  await removeProject(row.id)
-  ElMessage.success('删除成功')
-  currentPage.value = 1
-  await refresh()
+  try {
+    await removeProject(row.id)
+    ElMessage.success('删除成功')
+    currentPage.value = 1
+    await refresh()
+  } catch {
+    // 拦截器已统一提示，此处不重复处理。
+  }
 }
 
 /** 导出 CSV。 */
 async function handleExport(): Promise<void> {
-  await exportProjectCsv(buildQuery())
+  try {
+    await exportProjectCsv(buildQuery())
+  } catch {
+    // 拦截器已统一提示，此处不重复处理。
+  }
 }
 
 onMounted(() => {
