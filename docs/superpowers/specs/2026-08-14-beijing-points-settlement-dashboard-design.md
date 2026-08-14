@@ -62,9 +62,10 @@ frontend/
       ScoreDistribution.vue       # 板块4：积分分布
       AiAssistant.vue             # 板块5：AI 助手
     ai/
-      client.ts                   # OpenAI 兼容请求封装
+      client.ts                   # OpenAI 兼容流式请求封装
       tools.ts                    # 工具定义 + handler
       prompt.ts                   # system prompt
+      history.ts                  # 对话历史读写 + localStorage 持久化 + 裁剪
 ```
 
 ## 5. 数据层
@@ -144,6 +145,14 @@ frontend/
 
 - 用 `fetch` + `ReadableStream` 读取 `text/event-stream`，逐行解析 `data:` 事件，`data: [DONE]` 结束。
 - 工具调用参数为分片 JSON，需按 `tool_calls[i].index` 拼接后再 `JSON.parse`。
+
+### 7.5 对话记忆管理
+
+- **多轮上下文**：维护 `messages` 会话历史数组，跨轮次累积，每轮请求携带完整历史，支持追问指代（如「那排名第二的单位呢？」）。
+- **持久化**：历史存 `localStorage`，刷新 / 重开页面后恢复上次对话。
+- **历史上限**：只保留最近 **10 轮对话**（一轮 = 一次用户提问 + 对应助手回答，含中间的 tool_calls 与 tool 结果），超出删除最早一轮（始终保留 system prompt）。
+- **不做历史总结**（暂不实现）。
+- **清空对话**按钮：手动重置内存历史与 `localStorage`。
 
 ## 8. 错误处理
 
