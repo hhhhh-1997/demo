@@ -554,7 +554,10 @@ import type { Record } from '../types'
 const KEY = 'points-settlement:records'
 const r = (id: string): Record => ({ id, name: 'N', birth: '1980-01', unit: 'U', score: 100, age: 46 })
 
-beforeEach(() => localStorage.clear())
+beforeEach(() => {
+  localStorage.clear()
+  useData().clearAll()
+})
 
 describe('useData', () => {
   it('初始为空', () => {
@@ -680,7 +683,7 @@ git commit -m "feat: 数据 store（localStorage 持久化 + CRUD）"
 
 **Interfaces:**
 - Consumes: `LlmConfig`（Task 2）。
-- Produces: `useLlmConfig()` 返回 `{ configs, defaultConfig, add(config), update(id, patch), remove(id), setDefault(id) }`；`add` 入参为 `Omit<LlmConfig, 'id' | 'isDefault'>`。
+- Produces: `useLlmConfig()` 返回 `{ configs, defaultConfig, add(config), update(id, patch), remove(id), setDefault(id), clearAll() }`；`add` 入参为 `Omit<LlmConfig, 'id' | 'isDefault'>`。
 
 - [ ] **Step 1: 写失败测试**
 
@@ -690,7 +693,10 @@ git commit -m "feat: 数据 store（localStorage 持久化 + CRUD）"
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useLlmConfig } from './useLlmConfig'
 
-beforeEach(() => localStorage.clear())
+beforeEach(() => {
+  localStorage.clear()
+  useLlmConfig().clearAll()
+})
 
 const cfg = () => ({ name: '主模型', baseUrl: 'https://a.com/v1', apiKey: 'sk-1', model: 'gpt-4o-mini' })
 
@@ -758,6 +764,7 @@ export interface LlmConfigStore {
   update: (id: string, patch: Partial<LlmConfig>) => void
   remove: (id: string) => void
   setDefault: (id: string) => void
+  clearAll: () => void
 }
 
 export function useLlmConfig(): LlmConfigStore {
@@ -782,6 +789,10 @@ export function useLlmConfig(): LlmConfigStore {
     setDefault(id) {
       configs.value = configs.value.map(c => ({ ...c, isDefault: c.id === id }))
       localStorage.setItem(STORAGE_KEY, JSON.stringify(configs.value))
+    },
+    clearAll() {
+      configs.value = []
+      localStorage.setItem(STORAGE_KEY, '[]')
     },
   }
 }
