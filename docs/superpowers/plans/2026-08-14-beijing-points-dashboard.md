@@ -1105,7 +1105,7 @@ git commit -m "feat: AI 固定工具集（10 个查询工具）"
 **Interfaces:**
 - Consumes: `ChatMessage`、`ToolCall`、`openaiTools`（Task 7）。
 - Produces:
-  - `client.ts`: `accumulateToolCalls(existing: ToolCall[], deltas: Partial<ToolCall>[]): ToolCall[]`、`streamChatCompletion(opts): Promise<{ content: string; toolCalls: ToolCall[] }>`。`opts = { baseUrl; apiKey; model; messages; tools; onDelta(text) }`。
+  - `client.ts`: `ToolCallDelta`、`accumulateToolCalls(existing: ToolCall[], deltas: ToolCallDelta[]): ToolCall[]`、`streamChatCompletion(opts): Promise<{ content: string; toolCalls: ToolCall[] }>`。`opts = { baseUrl; apiKey; model; messages; tools; onDelta(text) }`。
   - `prompt.ts`: `SYSTEM_PROMPT: string`。
 
 - [ ] **Step 1: 写失败测试（纯函数部分）**
@@ -1115,11 +1115,11 @@ git commit -m "feat: AI 固定工具集（10 个查询工具）"
 ```ts
 import { describe, it, expect } from 'vitest'
 import { accumulateToolCalls } from './client'
-import type { ToolCall } from '../types'
+import type { ToolCallDelta } from './client'
 
 describe('accumulateToolCalls', () => {
   it('按 index 合并分片参数', () => {
-    const deltas: any[] = [
+    const deltas: ToolCallDelta[] = [
       { index: 0, id: 'call_1', function: { name: 'top_units', arguments: '{"n":' } },
       { index: 0, function: { arguments: '2}' } },
     ]
@@ -1155,20 +1155,25 @@ export const SYSTEM_PROMPT = [
 ```ts
 import type { ChatMessage, ToolCall } from '../types'
 
-export function accumulateToolCalls(existing: ToolCall[], deltas: Partial<ToolCall>[]): ToolCall[] {
+export interface ToolCallDelta {
+  index?: number
+  id?: string
+  type?: 'function'
+  function?: { name?: string; arguments?: string }
+}
+
+export function accumulateToolCalls(existing: ToolCall[], deltas: ToolCallDelta[]): ToolCall[] {
   const byIndex = new Map<number, ToolCall>()
-  for (const c of existing) byIndex.set((c as any).__index ?? 0, c)
+  existing.forEach((c, i) => byIndex.set(i, c))
   for (const d of deltas) {
-    const idx = (d as any).index ?? 0
-    if (!byIndex.has(idx)) {
-      byIndex.set(idx, { id: d.id ?? '', type: 'function', function: { name: '', arguments: '' }, __index: idx } as ToolCall)
-    }
-    const cur = byIndex.get(idx)!
+    const idx = d.index ?? 0
+    const cur = byIndex.get(idx) ?? { id: '', type: 'function', function: { name: '', arguments: '' } }
     if (d.id) cur.id = d.id
     if (d.function?.name) cur.function.name += d.function.name
     if (d.function?.arguments) cur.function.arguments += d.function.arguments
+    byIndex.set(idx, cur)
   }
-  return [...byIndex.values()].map(({ __index, ...c }) => c)
+  return [...byIndex.values()]
 }
 
 interface StreamOptions {
@@ -1210,7 +1215,7 @@ export async function streamChatCompletion(opts: StreamOptions): Promise<StreamR
   const decoder = new TextDecoder()
   let buffer = ''
   let content = ''
-  const toolDeltas: Partial<ToolCall>[] = []
+  const toolDeltas: ToolCallDelta[] = []
 
   while (true) {
     const { done, value } = await reader.read()
@@ -1238,9 +1243,6 @@ export async function streamChatCompletion(opts: StreamOptions): Promise<StreamR
   const toolCalls = accumulateToolCalls([], toolDeltas)
   return { content, toolCalls }
 }
-```
-
-注意：`accumulateToolCalls` 中临时用 `__index` 保留分片顺序，返回前剥离（见 `map(({ __index, ...c }) => c)`）。TypeScript 下 `ToolCall` 无 `__index`，用 `as any` 已处理。
 
 - [ ] **Step 5: 运行测试确认通过**
 
