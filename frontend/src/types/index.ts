@@ -36,6 +36,14 @@ export interface ProjectVO {
   issueTime: string
 }
 
+/** 项目维护页统计卡片。 */
+export interface ProjectStats {
+  total: number
+  draft: number
+  reviewRejected: number
+  auditRejected: number
+}
+
 /** 名称-数值统计项（用于图表聚合）。 */
 export interface NameValue {
   name: string
@@ -170,4 +178,24 @@ export interface SysMenu {
   visible: number
   status: number
   children: SysMenu[] | null
+}
+
+/** 字典数据项。 */
+export interface SysDictData {
+  id: number
+  dictType: string
+  dictLabel: string
+  dictValue: string
+  sort: number
+  status: number
+}
+
+/** 部门树节点。 */
+export interface SysDept {
+  id: number
+  deptName: string
+  parentId: number
+  sort: number
+  status: number
+  children: SysDept[] | null
 }

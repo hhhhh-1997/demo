@@ -35,7 +35,7 @@ const router = createRouter({
         {
           path: 'project',
           name: 'Project',
-          component: () => import('../views/placeholder/index.vue'),
+          component: () => import('../views/project/index.vue'),
           meta: { title: '储备项目维护', permissions: ['project:add'] },
         },
         {
