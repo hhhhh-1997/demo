@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.dromara.demo.project.mapper.ProjectMapper">
+
+    <resultMap id="NameValueMap" type="org.dromara.demo.project.vo.NameValue">
+        <result column="name" property="name"/>
+        <result column="val" property="value"/>
+    </resultMap>
+
+    <select id="countGroupByType" resultMap="NameValueMap">
+        SELECT project_type AS name, COUNT(*) AS val
+        FROM project
+        WHERE status IN (#{status1}, #{status2})
+        GROUP BY project_type
+    </select>
+
+    <select id="countGroupByDept" resultMap="NameValueMap">
+        SELECT d.dept_name AS name, COUNT(*) AS val
+        FROM project p
+        LEFT JOIN sys_dept d ON p.dept_id = d.id
+        WHERE p.status IN (#{status1}, #{status2})
+        GROUP BY d.dept_name
+    </select>
+
+    <select id="sumInvestmentAmount" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(investment_amount), 0)
+        FROM project
+        WHERE status IN (#{status1}, #{status2})
+    </select>
+
+</mapper>

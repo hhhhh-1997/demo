@@ -16,6 +16,8 @@ import org.dromara.demo.project.dto.ProjectQuery;
 import org.dromara.demo.project.dto.ProjectSaveDTO;
 import org.dromara.demo.project.mapper.ProjectMapper;
 import org.dromara.demo.project.vo.ProjectVO;
+import org.dromara.demo.reserve.vo.ReserveDetailVO;
+import org.dromara.demo.reserve.vo.ReserveStatsVO;
 import org.dromara.demo.review.domain.ProjectReview;
 import org.dromara.demo.review.dto.ReviewCommand;
 import org.dromara.demo.review.mapper.ProjectReviewMapper;
@@ -176,6 +178,7 @@ public class ProjectService {
      *
      * @param id 项目 ID
      */
+    @Transactional(rollbackFor = Exception.class)
     public void issue(Long id) {
         Project p = projectMapper.selectById(id);
         if (p == null) {
@@ -329,6 +332,81 @@ public class ProjectService {
     }
 
     /**
+     * 储备库分页：仅待下达 / 已下达，可选筛选，按创建时间倒序。
+     *
+     * @param q 查询条件
+     * @return 分页结果
+     */
+    public PageResult<ProjectVO> reservePage(ProjectQuery q) {
+        long pageNum = q.getPageNum() == null ? 1 : q.getPageNum();
+        long pageSize = q.getPageSize() == null ? 10 : q.getPageSize();
+        LambdaQueryWrapper<Project> wrapper = buildReserveWrapper(q);
+        wrapper.orderByDesc(Project::getCreateTime);
+        Page<Project> page = projectMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        Map<Long, String> deptNames = deptNameMap();
+        List<ProjectVO> list = page.getRecords().stream().map(p -> toVO(p, deptNames)).toList();
+        return new PageResult<>(page.getTotal(), list);
+    }
+
+    /**
+     * 储备库详情：项目 + 最新论证 + 最新审核记录。
+     *
+     * @param id 项目 ID
+     * @return 储备库详情
+     */
+    public ReserveDetailVO reserveDetail(Long id) {
+        Project p = projectMapper.selectById(id);
+        if (p == null) {
+            throw new BusinessException("项目不存在");
+        }
+        ProjectReview review = projectReviewMapper.selectOne(new LambdaQueryWrapper<ProjectReview>()
+                .eq(ProjectReview::getProjectId, id)
+                .orderByDesc(ProjectReview::getReviewTime)
+                .last("LIMIT 1"));
+        ProjectAudit audit = projectAuditMapper.selectOne(new LambdaQueryWrapper<ProjectAudit>()
+                .eq(ProjectAudit::getProjectId, id)
+                .orderByDesc(ProjectAudit::getAuditTime)
+                .last("LIMIT 1"));
+        ReserveDetailVO vo = new ReserveDetailVO();
+        vo.setProject(toVO(p, deptNameMap()));
+        vo.setReview(review == null ? null : toReviewVO(review));
+        vo.setAudit(audit == null ? null : toAuditVO(audit));
+        return vo;
+    }
+
+    /**
+     * 储备库统计：总数 / 投资金额合计 / 待下达 / 已下达 / 分类与单位分布。
+     *
+     * @return 统计结果
+     */
+    public ReserveStatsVO reserveStats() {
+        String pendingCode = ProjectStatus.PENDING_ISSUE.getCode();
+        String issuedCode = ProjectStatus.ISSUED.getCode();
+        long pending = countByStatus(ProjectStatus.PENDING_ISSUE);
+        long issued = countByStatus(ProjectStatus.ISSUED);
+        ReserveStatsVO vo = new ReserveStatsVO();
+        vo.setTotal(pending + issued);
+        vo.setTotalAmountYuan(projectMapper.sumInvestmentAmount(pendingCode, issuedCode));
+        vo.setPending(pending);
+        vo.setIssued(issued);
+        vo.setCategoryDist(projectMapper.countGroupByType(pendingCode, issuedCode));
+        vo.setDeptDist(projectMapper.countGroupByDept(pendingCode, issuedCode));
+        return vo;
+    }
+
+    /**
+     * 储备库导出：仅待下达 / 已下达，按查询条件筛选（不分页）。
+     *
+     * @param q 查询条件
+     * @return 项目列表
+     */
+    public List<Project> reserveExportList(ProjectQuery q) {
+        LambdaQueryWrapper<Project> wrapper = buildReserveWrapper(q);
+        wrapper.orderByDesc(Project::getCreateTime);
+        return projectMapper.selectList(wrapper);
+    }
+
+    /**
      * 新增项目：默认草稿，生成项目编号，来源手动录入。
      *
      * @param dto 项目请求体
@@ -471,6 +549,16 @@ public class ProjectService {
         wrapper.eq(StringUtils.hasText(q.getProjectType()), Project::getProjectType, q.getProjectType());
         wrapper.eq(q.getDeptId() != null, Project::getDeptId, q.getDeptId());
         wrapper.eq(StringUtils.hasText(q.getStatus()), Project::getStatus, q.getStatus());
+        wrapper.like(StringUtils.hasText(q.getName()), Project::getProjectName, q.getName());
+        return wrapper;
+    }
+
+    private LambdaQueryWrapper<Project> buildReserveWrapper(ProjectQuery q) {
+        LambdaQueryWrapper<Project> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(Project::getStatus, ProjectStatus.PENDING_ISSUE.getCode(), ProjectStatus.ISSUED.getCode());
+        wrapper.eq(StringUtils.hasText(q.getStatus()), Project::getStatus, q.getStatus());
+        wrapper.eq(StringUtils.hasText(q.getProjectType()), Project::getProjectType, q.getProjectType());
+        wrapper.eq(q.getDeptId() != null, Project::getDeptId, q.getDeptId());
         wrapper.like(StringUtils.hasText(q.getName()), Project::getProjectName, q.getName());
         return wrapper;
     }
