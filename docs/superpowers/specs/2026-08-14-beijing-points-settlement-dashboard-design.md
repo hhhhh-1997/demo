@@ -36,30 +36,32 @@
 | 项 | 选择 |
 |---|---|
 | 框架 | 现有 Vue 3 + TypeScript + Vite 脚手架 |
-| UI 组件 | Naive UI（已依赖） |
-| 图表 | ECharts（新增依赖） |
+| UI 组件 | 自定义 CSS 复刻 JoinBright 设计系统（含明暗主题），弃用 Naive UI |
+| 图表 | ECharts（新增依赖，定制配色匹配设计系统） |
 | 数据加载 | 浏览器内解析 Excel（SheetJS / `xlsx`），导入后存 localStorage |
 | AI 调用 | OpenAI 兼容 `/v1/chat/completions`，支持 `tools`（function calling） |
 | AI 数据访问 | 方案 A：固定工具集 |
 
 ## 4. 架构
 
-单页应用，左侧边栏导航 + 右侧内容区，共 6 个板块。
+单页应用，顶部导航栏 + 内容区，共 6 个板块。
 
 ```
 frontend/
   src/
+    styles/theme.css              # JoinBright 设计令牌 + 组件样式（复刻原型）
     types.ts                      # Record 接口
     data/importer.ts              # 浏览器解析 Excel（SheetJS）+ 派生字段（age）
     utils/stats.ts                # 聚合/分布计算（纯函数，供图表与 AI 工具共用）
     stores/useData.ts             # 全局数据状态 + localStorage 持久化
     stores/useLlmConfig.ts        # 大模型配置 CRUD + localStorage 持久化
+    composables/useTheme.ts       # 明暗主题切换
     components/
-      DataQuery.vue               # 板块1：数据查询（含导入 + 增删改）
+      Overview.vue                # 板块1：总览（KPI + 查询 + 导入 + 增删改）
       AgeAnalysis.vue             # 板块2：年龄分析
       UnitAnalysis.vue            # 板块3：单位分析
       ScoreDistribution.vue       # 板块4：积分分布
-      AiAssistant.vue             # 板块5：AI 助手
+      AiAssistant.vue             # 板块5：AI 智能问数
       LlmConfig.vue               # 板块6：大模型管理
     ai/
       client.ts                   # OpenAI 兼容流式请求封装
@@ -79,12 +81,13 @@ frontend/
 
 ## 6. 六个板块
 
-### 6.1 数据查询
+### 6.1 总览
 
+- KPI 行：落户总人数 / 平均积分 / 最高积分 / 平均年龄 / 涉及单位
 - 「导入 Excel」按钮：选择 `.xlsx`，浏览器内解析；首次导入初始化（全量），之后增量导入（按公示编号 upsert：存在则更新、不存在则新增）
 - 搜索框：姓名 / 公示编号 / 单位名称模糊匹配
 - 筛选：年龄区间、积分区间
-- `n-data-table` 展示（分页）
+- 自定义表格展示（分页）
 - 行点击弹出详情
 - 记录增 / 删 / 改：新增记录、行内编辑、删除，改动即时写入 `localStorage`
 - 「清空数据」按钮
@@ -107,7 +110,7 @@ frontend/
 - 各分数段人数表
 - 汇总：最高 / 最低 / 平均 / 中位数
 
-### 6.5 AI 助手
+### 6.5 AI 智能问数
 
 - 聊天界面
 - 顶部配置选择：下拉选择使用哪个大模型配置（默认用「大模型管理」中标记为默认的配置）
