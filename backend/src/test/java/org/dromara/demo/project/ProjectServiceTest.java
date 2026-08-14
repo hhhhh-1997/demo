@@ -1,5 +1,6 @@
 package org.dromara.demo.project;
 
+import org.dromara.demo.audit.mapper.ProjectAuditMapper;
 import org.dromara.demo.common.BusinessException;
 import org.dromara.demo.project.domain.Project;
 import org.dromara.demo.project.domain.ProjectStatus;
@@ -30,7 +31,8 @@ class ProjectServiceTest {
     @BeforeEach
     void setUp() {
         mapper = Mockito.mock(ProjectMapper.class);
-        service = new ProjectService(mapper, Mockito.mock(SysDeptMapper.class), Mockito.mock(ProjectReviewMapper.class));
+        service = new ProjectService(mapper, Mockito.mock(SysDeptMapper.class), Mockito.mock(ProjectReviewMapper.class),
+                Mockito.mock(ProjectAuditMapper.class));
     }
 
     private Project p(String status) {

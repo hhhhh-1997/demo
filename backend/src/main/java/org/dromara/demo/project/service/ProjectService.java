@@ -3,6 +3,11 @@ package org.dromara.demo.project.service;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.dromara.demo.audit.domain.ProjectAudit;
+import org.dromara.demo.audit.dto.AuditCommand;
+import org.dromara.demo.audit.mapper.ProjectAuditMapper;
+import org.dromara.demo.audit.vo.AuditDetailVO;
+import org.dromara.demo.audit.vo.AuditRecordVO;
 import org.dromara.demo.common.BusinessException;
 import org.dromara.demo.common.PageResult;
 import org.dromara.demo.project.domain.Project;
@@ -44,11 +49,14 @@ public class ProjectService {
     private final ProjectMapper projectMapper;
     private final SysDeptMapper deptMapper;
     private final ProjectReviewMapper projectReviewMapper;
+    private final ProjectAuditMapper projectAuditMapper;
 
-    public ProjectService(ProjectMapper projectMapper, SysDeptMapper deptMapper, ProjectReviewMapper projectReviewMapper) {
+    public ProjectService(ProjectMapper projectMapper, SysDeptMapper deptMapper, ProjectReviewMapper projectReviewMapper,
+            ProjectAuditMapper projectAuditMapper) {
         this.projectMapper = projectMapper;
         this.deptMapper = deptMapper;
         this.projectReviewMapper = projectReviewMapper;
+        this.projectAuditMapper = projectAuditMapper;
     }
 
     /**
@@ -115,6 +123,52 @@ public class ProjectService {
         p.setStatus(cmd.getPass() ? ProjectStatus.PENDING_AUDIT.getCode() : ProjectStatus.REVIEW_REJECTED.getCode());
         p.setUpdateTime(LocalDateTime.now());
         projectMapper.updateById(p);
+    }
+
+    /**
+     * 项目审核：待审核 → 待下达（通过）或 审核退回（不通过），并落一条审核记录。
+     *
+     * @param id  项目 ID
+     * @param cmd 审核请求体
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void audit(Long id, AuditCommand cmd) {
+        Project p = projectMapper.selectById(id);
+        if (p == null) {
+            throw new BusinessException("项目不存在");
+        }
+        if (ProjectStatus.fromCode(p.getStatus()) != ProjectStatus.PENDING_AUDIT) {
+            throw new BusinessException("仅待审核项目可审核");
+        }
+        ProjectAudit record = new ProjectAudit();
+        record.setProjectId(id);
+        record.setOpinion(cmd.getOpinion());
+        record.setResult(cmd.getPass() ? "通过" : "退回");
+        record.setAuditBy(StpUtil.getLoginIdAsLong());
+        record.setAuditTime(LocalDateTime.now());
+        projectAuditMapper.insert(record);
+        p.setStatus(cmd.getPass() ? ProjectStatus.PENDING_ISSUE.getCode() : ProjectStatus.AUDIT_REJECTED.getCode());
+        p.setUpdateTime(LocalDateTime.now());
+        projectMapper.updateById(p);
+    }
+
+    /**
+     * 批量审核：任一失败整体回滚。
+     *
+     * @param ids  项目 ID 列表
+     * @param pass 是否通过
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void auditBatch(List<Long> ids, boolean pass) {
+        if (ids == null || ids.isEmpty()) {
+            throw new BusinessException("请选择要审核的项目");
+        }
+        for (Long id : ids) {
+            AuditCommand cmd = new AuditCommand();
+            cmd.setOpinion("批量审核");
+            cmd.setPass(pass);
+            audit(id, cmd);
+        }
     }
 
     /**
@@ -194,6 +248,31 @@ public class ProjectService {
     }
 
     /**
+     * 审核分页：仅待审核 / 待下达（审核通过）/ 审核退回，可选筛选，按创建时间倒序。
+     *
+     * @param q 查询条件
+     * @return 分页结果
+     */
+    public PageResult<ProjectVO> auditPage(ProjectQuery q) {
+        long pageNum = q.getPageNum() == null ? 1 : q.getPageNum();
+        long pageSize = q.getPageSize() == null ? 10 : q.getPageSize();
+        LambdaQueryWrapper<Project> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(Project::getStatus, ProjectStatus.PENDING_AUDIT.getCode(),
+                ProjectStatus.PENDING_ISSUE.getCode(), ProjectStatus.AUDIT_REJECTED.getCode());
+        if (StringUtils.hasText(q.getStatus())) {
+            String mapped = "审核通过".equals(q.getStatus()) ? ProjectStatus.PENDING_ISSUE.getCode() : q.getStatus();
+            wrapper.eq(Project::getStatus, mapped);
+        }
+        wrapper.eq(StringUtils.hasText(q.getProjectType()), Project::getProjectType, q.getProjectType());
+        wrapper.like(StringUtils.hasText(q.getName()), Project::getProjectName, q.getName());
+        wrapper.orderByDesc(Project::getCreateTime);
+        Page<Project> page = projectMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        Map<Long, String> deptNames = deptNameMap();
+        List<ProjectVO> list = page.getRecords().stream().map(p -> toVO(p, deptNames)).toList();
+        return new PageResult<>(page.getTotal(), list);
+    }
+
+    /**
      * 查询项目详情。
      *
      * @param id 项目 ID
@@ -225,6 +304,27 @@ public class ProjectService {
         ReviewDetailVO vo = new ReviewDetailVO();
         vo.setProject(toVO(p, deptNameMap()));
         vo.setReview(record == null ? null : toReviewVO(record));
+        return vo;
+    }
+
+    /**
+     * 审核详情：项目 + 最新审核记录。
+     *
+     * @param id 项目 ID
+     * @return 审核详情
+     */
+    public AuditDetailVO auditDetail(Long id) {
+        Project p = projectMapper.selectById(id);
+        if (p == null) {
+            throw new BusinessException("项目不存在");
+        }
+        ProjectAudit record = projectAuditMapper.selectOne(new LambdaQueryWrapper<ProjectAudit>()
+                .eq(ProjectAudit::getProjectId, id)
+                .orderByDesc(ProjectAudit::getAuditTime)
+                .last("LIMIT 1"));
+        AuditDetailVO vo = new AuditDetailVO();
+        vo.setProject(toVO(p, deptNameMap()));
+        vo.setAudit(record == null ? null : toAuditVO(record));
         return vo;
     }
 
@@ -334,6 +434,27 @@ public class ProjectService {
     }
 
     /**
+     * 审核统计：待审核 / 审核通过（待下达）/ 审核退回 / 通过率。
+     *
+     * @return 统计结果
+     */
+    public Map<String, Object> auditStats() {
+        long pending = countByStatus(ProjectStatus.PENDING_AUDIT);
+        long passed = countByStatus(ProjectStatus.PENDING_ISSUE);
+        long rejected = countByStatus(ProjectStatus.AUDIT_REJECTED);
+        long denominator = passed + rejected;
+        BigDecimal passRate = denominator == 0 ? BigDecimal.ZERO
+                : BigDecimal.valueOf(passed).multiply(BigDecimal.valueOf(100))
+                        .divide(BigDecimal.valueOf(denominator), 1, RoundingMode.HALF_UP);
+        Map<String, Object> result = new HashMap<>();
+        result.put("pending", pending);
+        result.put("passed", passed);
+        result.put("rejected", rejected);
+        result.put("passRate", passRate);
+        return result;
+    }
+
+    /**
      * 导出：按查询条件筛选（不分页），用于 CSV 导出。
      *
      * @param q 查询条件
@@ -388,6 +509,14 @@ public class ProjectService {
         vo.setOpinion(r.getOpinion());
         vo.setResult(r.getResult());
         vo.setReviewTime(r.getReviewTime());
+        return vo;
+    }
+
+    private AuditRecordVO toAuditVO(ProjectAudit a) {
+        AuditRecordVO vo = new AuditRecordVO();
+        vo.setOpinion(a.getOpinion());
+        vo.setResult(a.getResult());
+        vo.setAuditTime(a.getAuditTime());
         return vo;
     }
 }
