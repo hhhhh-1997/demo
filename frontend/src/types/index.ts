@@ -217,3 +217,46 @@ export interface SysDept {
   status: number
   children: SysDept[] | null
 }
+
+/** 系统角色。 */
+export interface SysRole {
+  id: number
+  roleName: string
+  roleKey: string
+  sort: number
+  status: number
+  createTime?: string
+}
+
+/** 用户新增/编辑请求体。 */
+export interface SysUserDTO {
+  username: string
+  password?: string
+  nickname?: string
+  deptId?: number
+  status?: number
+  roleIds?: number[]
+}
+
+/** 角色新增/编辑请求体。 */
+export interface RoleDTO {
+  roleName: string
+  roleKey: string
+  sort?: number
+  status?: number
+  menuIds?: number[]
+}
+
+/** 菜单新增/编辑请求体。 */
+export interface SysMenuSaveDTO {
+  menuName: string
+  menuType: MenuType
+  parentId?: number
+  path?: string
+  component?: string
+  perms?: string
+  icon?: string
+  sort?: number
+  visible?: number
+  status?: number
+}
