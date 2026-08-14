@@ -1,26 +1,23 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
-const count = ref(0)
+import logo from './assets/logo-white.png'
 </script>
 
 <template>
-  <n-config-provider>
-    <div class="app">
-      <h1>Demo Frontend</h1>
-      <p>Vue 3 + TypeScript + Vite + Naive UI</p>
-      <n-space>
-        <n-button type="primary" @click="count++">count is {{ count }}</n-button>
-        <n-button>Default</n-button>
-      </n-space>
+  <nav class="nav-topbar">
+    <img class="nav-brand-logo" :src="logo" alt="JoinBright" />
+    <span class="nav-topbar-title">绩效管理系统</span>
+    <div class="nav-actions">
+      <span class="nav-avatar" aria-label="当前用户">管</span>
     </div>
-  </n-config-provider>
-</template>
+  </nav>
 
-<style scoped>
-.app {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-</style>
+  <main class="page-main">
+    <el-breadcrumb separator="/">
+      <el-breadcrumb-item>首页</el-breadcrumb-item>
+      <el-breadcrumb-item>绩效管理</el-breadcrumb-item>
+      <el-breadcrumb-item>绩效月报查询</el-breadcrumb-item>
+    </el-breadcrumb>
+    <h1 class="page-title">绩效月报查询</h1>
+    <!-- Task 7 将在此挂载 <PerformanceQuery /> -->
+  </main>
+</template>
