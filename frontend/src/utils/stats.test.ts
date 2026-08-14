@@ -72,4 +72,10 @@ describe('scoreDistribution', () => {
     const d = scoreDistribution(records, 2)
     expect(d[0]).toMatchObject({ lo: 120, hi: 122, count: 2 })
   })
+  it('所有分数相同且为分段整数倍时不返回空', () => {
+    const same = [rec('1', '1980-01', 'A', 120), rec('2', '1981-01', 'A', 120)]
+    const d = scoreDistribution(same, 2)
+    expect(d).toHaveLength(1)
+    expect(d[0].count).toBe(2)
+  })
 })

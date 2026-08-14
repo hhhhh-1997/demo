@@ -90,13 +90,16 @@ export function scoreDistribution(records: Record[], binSize = 2): ScoreBucket[]
   if (!records.length) return []
   const lo0 = Math.floor(Math.min(...records.map(r => r.score)) / binSize) * binSize
   const hi0 = Math.ceil(Math.max(...records.map(r => r.score)) / binSize) * binSize
+  if (lo0 === hi0) {
+    return [{ label: `${lo0}–${lo0 + binSize}`, lo: lo0, hi: lo0 + binSize, count: records.length }]
+  }
   const buckets: ScoreBucket[] = []
   for (let lo = lo0; lo < hi0; lo += binSize) {
     const hi = lo + binSize
     buckets.push({
       label: `${lo}–${hi}`,
       lo, hi,
-      count: records.filter(r => r.score >= lo && r.score < hi || (hi === hi0 && r.score === hi)).length,
+      count: records.filter(r => (r.score >= lo && r.score < hi) || (hi === hi0 && r.score === hi)).length,
     })
   }
   return buckets
