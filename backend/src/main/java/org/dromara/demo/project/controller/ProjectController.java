@@ -92,11 +92,7 @@ public class ProjectController {
     @SaCheckPermission("project:submit")
     @PostMapping("/submit/batch")
     public Result<Void> submitBatch(@RequestBody List<Long> ids) {
-        if (ids != null) {
-            for (Long id : ids) {
-                projectService.submit(id);
-            }
-        }
+        projectService.submitBatch(ids);
         return Result.success();
     }
 

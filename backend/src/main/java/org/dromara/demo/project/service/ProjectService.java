@@ -14,6 +14,7 @@ import org.dromara.demo.project.vo.ProjectVO;
 import org.dromara.demo.system.domain.SysDept;
 import org.dromara.demo.system.mapper.SysDeptMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
@@ -46,6 +47,7 @@ public class ProjectService {
      *
      * @param id 项目 ID
      */
+    @Transactional(rollbackFor = Exception.class)
     public void submit(Long id) {
         Project p = projectMapper.selectById(id);
         if (p == null) {
@@ -58,6 +60,21 @@ public class ProjectService {
         p.setStatus(ProjectStatus.PENDING_REVIEW.getCode());
         p.setUpdateTime(LocalDateTime.now());
         projectMapper.updateById(p);
+    }
+
+    /**
+     * 批量提报：任一失败整体回滚。
+     *
+     * @param ids 项目 ID 列表
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void submitBatch(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new BusinessException("请选择要提报的项目");
+        }
+        for (Long id : ids) {
+            submit(id);
+        }
     }
 
     /**
@@ -131,6 +148,7 @@ public class ProjectService {
      * @param dto 项目请求体
      * @return 新项目 ID
      */
+    @Transactional(rollbackFor = Exception.class)
     public Long create(ProjectSaveDTO dto) {
         Project p = new Project();
         p.setProjectName(dto.getProjectName());
@@ -155,6 +173,7 @@ public class ProjectService {
      * @param id  项目 ID
      * @param dto 项目请求体
      */
+    @Transactional(rollbackFor = Exception.class)
     public void update(Long id, ProjectSaveDTO dto) {
         Project p = projectMapper.selectById(id);
         if (p == null) {
@@ -181,6 +200,7 @@ public class ProjectService {
      *
      * @param id 项目 ID
      */
+    @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
         Project p = projectMapper.selectById(id);
         if (p == null) {
