@@ -5,6 +5,7 @@ import org.dromara.demo.project.domain.Project;
 import org.dromara.demo.project.domain.ProjectStatus;
 import org.dromara.demo.project.mapper.ProjectMapper;
 import org.dromara.demo.project.service.ProjectService;
+import org.dromara.demo.system.mapper.SysDeptMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -28,7 +29,7 @@ class ProjectServiceTest {
     @BeforeEach
     void setUp() {
         mapper = Mockito.mock(ProjectMapper.class);
-        service = new ProjectService(mapper);
+        service = new ProjectService(mapper, Mockito.mock(SysDeptMapper.class));
     }
 
     private Project p(String status) {
