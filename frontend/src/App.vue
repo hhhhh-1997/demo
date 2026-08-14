@@ -24,6 +24,7 @@ const current = ref<(typeof pages)[number]['key']>('overview')
 
 <template>
   <nav class="nav-topbar">
+    <img class="nav-brand-logo" src="/logo-white.png" alt="JoinBright" />
     <span class="nav-product">积分落户分析</span>
     <div class="nav-items">
       <button
