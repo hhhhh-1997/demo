@@ -30,7 +30,6 @@
 - 数据写入与编辑
 - 用户登录 / 权限
 - 移动端适配（桌面端优先）
-- AI 流式输出（v1 非流式，留作后续优化）
 
 ## 3. 技术选型（已确定）
 
@@ -111,7 +110,7 @@ frontend/
 
 ### 7.1 调用方式
 
-`POST {baseUrl}/chat/completions`，OpenAI 兼容，请求体含 `messages` 与 `tools`。baseUrl 为用户填写的基地址（如 `https://…/v1`），客户端自动补 `/chat/completions`。
+`POST {baseUrl}/chat/completions`，OpenAI 兼容，请求体含 `messages` 与 `tools`，且 `stream: true`（SSE 流式）。baseUrl 为用户填写的基地址（如 `https://…/v1`），客户端自动补 `/chat/completions`。
 
 ### 7.2 工具集（约 10 个，覆盖 统计/排名/明细）
 
@@ -134,11 +133,17 @@ frontend/
 - 中文、简洁回答，给出数字来源
 - 工具覆盖不到的问题如实说明
 
-### 7.4 对话循环
+### 7.4 对话循环（流式）
 
-用户消息 → 请求 → 若返回 `tool_calls` 则执行 handler、把结果以 `role:"tool"` 追加、再请求 → 得到最终回答渲染。
+用户消息 → 发送流式请求（`stream: true`）→ 边接收边渲染 `delta.content`，同时按 index 累积 `delta.tool_calls` 的参数分片 → 流结束：
 
-**决策：v1 非流式**（每轮一次完整请求，简单可靠）。
+- 若存在 `tool_calls`：执行 handler，追加 assistant 消息（含 tool_calls）与 `role:"tool"` 结果，发起**新一轮流式请求**，循环直到无 tool_calls。
+- 否则：完成。
+
+**实现要点：**
+
+- 用 `fetch` + `ReadableStream` 读取 `text/event-stream`，逐行解析 `data:` 事件，`data: [DONE]` 结束。
+- 工具调用参数为分片 JSON，需按 `tool_calls[i].index` 拼接后再 `JSON.parse`。
 
 ## 8. 错误处理
 
@@ -152,4 +157,4 @@ frontend/
 
 1. 年龄口径：`2026 − 出生年`
 2. 积分分段：默认每 10 分
-3. AI v1 非流式
+3. AI 采用流式输出（SSE）
