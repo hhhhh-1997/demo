@@ -44,7 +44,7 @@
 
 ## 4. 架构
 
-单页应用，左侧边栏导航 + 右侧内容区，共 7 个板块。
+单页应用，左侧边栏导航 + 右侧内容区，共 6 个板块。
 
 ```
 frontend/
@@ -55,13 +55,12 @@ frontend/
     stores/useData.ts             # 全局数据状态 + localStorage 持久化
     stores/useLlmConfig.ts        # 大模型配置 CRUD + localStorage 持久化
     components/
-      DataQuery.vue               # 板块1：数据查询
+      DataQuery.vue               # 板块1：数据查询（含导入 + 增删改）
       AgeAnalysis.vue             # 板块2：年龄分析
       UnitAnalysis.vue            # 板块3：单位分析
       ScoreDistribution.vue       # 板块4：积分分布
       AiAssistant.vue             # 板块5：AI 助手
       LlmConfig.vue               # 板块6：大模型管理
-      DataManage.vue              # 板块7：数据管理（导入 + 增删改）
     ai/
       client.ts                   # OpenAI 兼容流式请求封装
       tools.ts                    # 工具定义 + handler
@@ -78,14 +77,17 @@ frontend/
 - **数据模型**：`{ id, name, birth, unit, score }`，加载时派生 `age`。
 - **年龄口径（决策）**：`age = 2026 − 出生年`（以公示年份 2026 为基准，月不参与；出生年月格式为 YYYY-MM）。
 
-## 6. 七个板块
+## 6. 六个板块
 
 ### 6.1 数据查询
 
+- 「导入 Excel」按钮：选择 `.xlsx`，浏览器内解析；首次导入初始化（全量），之后增量导入（按公示编号 upsert：存在则更新、不存在则新增）
 - 搜索框：姓名 / 公示编号 / 单位名称模糊匹配
 - 筛选：年龄区间、积分区间
-- `n-data-table` 展示（分页，6003 行）
+- `n-data-table` 展示（分页）
 - 行点击弹出详情
+- 记录增 / 删 / 改：新增记录、行内编辑、删除，改动即时写入 `localStorage`
+- 「清空数据」按钮
 
 ### 6.2 年龄分析
 
@@ -118,12 +120,6 @@ frontend/
 - 标记一个为默认配置
 - 存 `localStorage`
 - 注意：静态前端下 API Key 以明文存于浏览器 `localStorage`，属已知局限
-
-### 6.7 数据管理
-
-- 「导入 Excel」：选择 `.xlsx`，浏览器内解析；首次导入初始化（全量），之后增量导入（按公示编号 upsert：存在则更新、不存在则新增）
-- 记录增 / 删 / 改：表格内编辑，改动即时写入 `localStorage`
-- 「清空数据」：一键清空当前数据
 
 ## 7. AI 助手（方案 A：固定工具集）
 
