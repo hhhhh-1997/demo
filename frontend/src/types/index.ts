@@ -130,6 +130,8 @@ export interface BatchAuditCommand {
 export interface AuditDetailVO {
   project: ProjectVO
   audit: AuditRecordVO | null
+  reviewResult: string | null
+  reviewOpinion: string | null
 }
 
 /** 审核统计卡片（passRate 已为百分比数值）。 */

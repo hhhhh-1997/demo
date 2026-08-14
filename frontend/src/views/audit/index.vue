@@ -5,7 +5,6 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { CircleCheck, CircleClose, Edit, View } from '@element-plus/icons-vue'
 import { yuanToWan } from '../../utils/format'
 import { projectTypeDict } from '../../api/project'
-import { detail as reviewDetail } from '../../api/review'
 import {
   batch as batchAudit,
   detail as auditDetail,
@@ -19,7 +18,6 @@ import type {
   AuditStats,
   ProjectStatus,
   ProjectVO,
-  ReviewRecordVO,
   SysDictData,
 } from '../../types'
 import StatCard from '../../components/StatCard.vue'
@@ -45,9 +43,15 @@ const statusOptions: Array<{ value: string; label: string }> = [
   { value: '审核退回', label: '审核退回' },
 ]
 
-/** 列表行：项目 + 最新论证记录（用于展示论证结果/意见）。 */
+/** 论证结论摘要（审核页展示用）。 */
+interface ReviewSummary {
+  result: string
+  opinion: string
+}
+
+/** 列表行：项目 + 最新论证结论摘要。 */
 interface AuditRow extends ProjectVO {
-  review: ReviewRecordVO | null
+  review: ReviewSummary | null
 }
 
 /** 筛选条件。 */
@@ -87,7 +91,6 @@ const form = reactive<AuditFormModel>(emptyForm())
 const detailDialogVisible = ref(false)
 const detailLoading = ref(false)
 const detailData = ref<AuditDetailVO | null>(null)
-const detailRow = ref<AuditRow | null>(null)
 
 /** 空审核表单模型。 */
 function emptyForm(): AuditFormModel {
@@ -172,11 +175,14 @@ async function loadProjects(): Promise<void> {
   }
 }
 
-/** 补充行内论证记录（失败回退为 null，论证结果列降级为 —）。 */
+/** 补充行内论证结论摘要（审核详情同模块接口，失败回退为 null）。 */
 async function enrichRow(p: ProjectVO): Promise<AuditRow> {
   try {
-    const res = await reviewDetail(p.id)
-    return { ...p, review: res.data.review }
+    const res = await auditDetail(p.id)
+    const review: ReviewSummary | null = res.data.reviewResult
+      ? { result: res.data.reviewResult, opinion: res.data.reviewOpinion ?? '' }
+      : null
+    return { ...p, review }
   } catch {
     return { ...p, review: null }
   }
@@ -298,7 +304,6 @@ async function handleAuditSubmit(): Promise<void> {
 
 /** 打开详情弹窗。 */
 async function openDetail(row: AuditRow): Promise<void> {
-  detailRow.value = row
   detailDialogVisible.value = true
   detailLoading.value = true
   detailData.value = null
@@ -534,8 +539,8 @@ onMounted(() => {
           {{ detailData ? yuanToWan(detailData.project.investmentAmount) : '-' }}
         </el-descriptions-item>
         <el-descriptions-item label="论证结果">
-          <el-tag v-if="detailRow?.review" :type="reviewResultTagType(detailRow.review.result)" size="small">
-            {{ detailRow.review.result }}
+          <el-tag v-if="detailData?.reviewResult" :type="reviewResultTagType(detailData.reviewResult)" size="small">
+            {{ detailData.reviewResult }}
           </el-tag>
           <span v-else class="empty-value">—</span>
         </el-descriptions-item>
@@ -546,7 +551,7 @@ onMounted(() => {
           <span v-else>-</span>
         </el-descriptions-item>
         <el-descriptions-item label="论证意见" :span="2">
-          {{ detailRow?.review?.opinion || '—' }}
+          {{ detailData?.reviewOpinion || '—' }}
         </el-descriptions-item>
         <el-descriptions-item label="审核意见" :span="2">
           {{ detailData?.audit?.opinion || '—' }}

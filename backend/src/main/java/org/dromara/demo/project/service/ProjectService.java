@@ -325,9 +325,15 @@ public class ProjectService {
                 .eq(ProjectAudit::getProjectId, id)
                 .orderByDesc(ProjectAudit::getAuditTime)
                 .last("LIMIT 1"));
+        ProjectReview review = projectReviewMapper.selectOne(new LambdaQueryWrapper<ProjectReview>()
+                .eq(ProjectReview::getProjectId, id)
+                .orderByDesc(ProjectReview::getReviewTime)
+                .last("LIMIT 1"));
         AuditDetailVO vo = new AuditDetailVO();
         vo.setProject(toVO(p, deptNameMap()));
         vo.setAudit(record == null ? null : toAuditVO(record));
+        vo.setReviewResult(review == null ? null : review.getResult());
+        vo.setReviewOpinion(review == null ? null : review.getOpinion());
         return vo;
     }
 
