@@ -1243,6 +1243,7 @@ export async function streamChatCompletion(opts: StreamOptions): Promise<StreamR
   const toolCalls = accumulateToolCalls([], toolDeltas)
   return { content, toolCalls }
 }
+```
 
 - [ ] **Step 5: 运行测试确认通过**
 
