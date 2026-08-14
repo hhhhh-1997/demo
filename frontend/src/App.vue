@@ -4,6 +4,7 @@ import { useTheme } from './composables/useTheme'
 import Overview from './components/Overview.vue'
 import AgeAnalysis from './components/AgeAnalysis.vue'
 import UnitAnalysis from './components/UnitAnalysis.vue'
+import ScoreDistribution from './components/ScoreDistribution.vue'
 
 const { theme, toggle } = useTheme()
 
@@ -43,7 +44,7 @@ const current = ref<(typeof pages)[number]['key']>('overview')
     <Overview v-if="current === 'overview'" />
     <AgeAnalysis v-else-if="current === 'age'" />
     <UnitAnalysis v-else-if="current === 'unit'" />
-    <div v-else-if="current === 'score'">积分分布（待实现）</div>
+    <ScoreDistribution v-else-if="current === 'score'" />
     <div v-else-if="current === 'ai'">AI 智能问数（待实现）</div>
     <div v-else-if="current === 'model'">大模型管理（待实现）</div>
   </main>
