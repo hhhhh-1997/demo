@@ -1,5 +1,5 @@
 import { createApp } from 'vue'
-import naive from 'naive-ui'
 import App from './App.vue'
+import './styles/theme.css'
 
-createApp(App).use(naive).mount('#app')
+createApp(App).mount('#app')
