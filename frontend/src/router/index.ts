@@ -53,7 +53,7 @@ const router = createRouter({
         {
           path: 'reserve',
           name: 'Reserve',
-          component: () => import('../views/placeholder/index.vue'),
+          component: () => import('../views/reserve/index.vue'),
           meta: { title: '统一储备库', permissions: ['reserve:view'] },
         },
         {
