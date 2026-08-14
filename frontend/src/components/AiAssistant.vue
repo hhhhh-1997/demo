@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, reactive } from 'vue'
 import { useData } from '../stores/useData'
 import { useLlmConfig } from '../stores/useLlmConfig'
 import { useToast } from '../composables/useToast'
@@ -59,7 +59,7 @@ async function send(text?: string) {
 
   try {
     for (let i = 0; i < 6; i++) {
-      const assistant: ChatMessage = { role: 'assistant', content: '' }
+      const assistant = reactive<ChatMessage>({ role: 'assistant', content: '' })
       messages.value.push(assistant)
 
       const res = await streamChatCompletion({
