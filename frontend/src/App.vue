@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useTheme } from './composables/useTheme'
 import Overview from './components/Overview.vue'
 import AgeAnalysis from './components/AgeAnalysis.vue'
+import UnitAnalysis from './components/UnitAnalysis.vue'
 
 const { theme, toggle } = useTheme()
 
@@ -41,7 +42,7 @@ const current = ref<(typeof pages)[number]['key']>('overview')
     <!-- Task 12–17 逐板块替换为真实组件 -->
     <Overview v-if="current === 'overview'" />
     <AgeAnalysis v-else-if="current === 'age'" />
-    <div v-else-if="current === 'unit'">单位分析（待实现）</div>
+    <UnitAnalysis v-else-if="current === 'unit'" />
     <div v-else-if="current === 'score'">积分分布（待实现）</div>
     <div v-else-if="current === 'ai'">AI 智能问数（待实现）</div>
     <div v-else-if="current === 'model'">大模型管理（待实现）</div>
