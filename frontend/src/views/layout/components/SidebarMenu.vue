@@ -14,10 +14,15 @@ import SidebarMenuItem from './SidebarMenuItem.vue'
 const route = useRoute()
 const menus = ref<SysMenu[]>([])
 
-/** 加载菜单树。 */
+/** 加载当前用户可见的菜单树。 */
 async function loadMenus(): Promise<void> {
-  const res = (await request.get('/system/menu/list')) as unknown as Result<SysMenu[]>
-  menus.value = res.data ?? []
+  try {
+    const res = (await request.get('/system/menu/routers')) as unknown as Result<SysMenu[]>
+    menus.value = res.data ?? []
+  } catch {
+    // 失败提示已由 request 拦截器统一处理，此处回退为空菜单，避免未处理的 Promise 拒绝。
+    menus.value = []
+  }
 }
 
 onMounted(loadMenus)

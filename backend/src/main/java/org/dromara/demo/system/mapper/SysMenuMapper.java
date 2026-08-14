@@ -21,4 +21,12 @@ public interface SysMenuMapper extends BaseMapper<SysMenu> {
      * @return 权限标识集合
      */
     List<String> selectPermsByUserId(@Param("userId") Long userId);
+
+    /**
+     * 根据用户 ID 查询其可见的目录/菜单（含父目录），用于前端动态菜单。
+     *
+     * @param userId 用户 ID
+     * @return 可见菜单集合（未组装树）
+     */
+    List<SysMenu> selectMenusByUserId(@Param("userId") Long userId);
 }

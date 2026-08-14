@@ -1,5 +1,6 @@
 package org.dromara.demo.system.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.dromara.demo.common.Result;
 import org.dromara.demo.system.domain.SysMenu;
@@ -36,6 +37,12 @@ public class SysMenuController {
     @GetMapping("/list")
     public Result<List<SysMenu>> list() {
         return Result.success(menuService.listTree());
+    }
+
+    @SaCheckLogin
+    @GetMapping("/routers")
+    public Result<List<SysMenu>> routers() {
+        return Result.success(menuService.listRouters());
     }
 
     @SaCheckPermission("system:menu")
