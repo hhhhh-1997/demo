@@ -145,8 +145,8 @@ export interface AuditStats {
 /** 统一储备库详情展示对象。 */
 export interface ReserveDetailVO {
   project: ProjectVO
-  review: ReviewRecordVO
-  audit: AuditRecordVO
+  review: ReviewRecordVO | null
+  audit: AuditRecordVO | null
 }
 
 /** 统一储备库统计展示对象。 */
