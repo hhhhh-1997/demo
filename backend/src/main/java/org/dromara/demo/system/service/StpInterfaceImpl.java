@@ -1,12 +1,8 @@
 package org.dromara.demo.system.service;
 
 import cn.dev33.satoken.stp.StpInterface;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import org.dromara.demo.system.domain.SysRole;
-import org.dromara.demo.system.domain.SysUser;
 import org.dromara.demo.system.mapper.SysMenuMapper;
 import org.dromara.demo.system.mapper.SysRoleMapper;
-import org.dromara.demo.system.mapper.SysUserMapper;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -20,12 +16,10 @@ import java.util.List;
 @Component
 public class StpInterfaceImpl implements StpInterface {
 
-    private final SysUserMapper userMapper;
     private final SysRoleMapper roleMapper;
     private final SysMenuMapper menuMapper;
 
-    public StpInterfaceImpl(SysUserMapper userMapper, SysRoleMapper roleMapper, SysMenuMapper menuMapper) {
-        this.userMapper = userMapper;
+    public StpInterfaceImpl(SysRoleMapper roleMapper, SysMenuMapper menuMapper) {
         this.roleMapper = roleMapper;
         this.menuMapper = menuMapper;
     }
