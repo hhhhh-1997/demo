@@ -36,6 +36,11 @@ function toolNames(msg: ChatMessage): string {
   return (msg.tool_calls ?? []).map(tc => tc.function.name).join('、')
 }
 
+function maskKey(key: string): string {
+  if (key.length <= 8) return '***'
+  return key.slice(0, 6) + '…' + key.slice(-4)
+}
+
 function scrollToBottom() {
   nextTick(() => {
     if (chatBody.value) chatBody.value.scrollTop = chatBody.value.scrollHeight
@@ -54,6 +59,7 @@ async function send(text?: string) {
   input.value = ''
   messages.value.push({ role: 'user', content: q })
   busy.value = true
+  console.info(`[AI] 使用配置「${cfg.name}」| baseUrl=${cfg.baseUrl} | model=${cfg.model} | apiKey=${maskKey(cfg.apiKey)}`)
 
   const loop: ChatMessage[] = [{ role: 'system', content: SYSTEM_PROMPT }, ...messages.value]
 
@@ -75,13 +81,18 @@ async function send(text?: string) {
         assistant.tool_calls = res.toolCalls
         loop.push(assistant)
         for (const tc of res.toolCalls) {
+          console.info('[AI] 调用工具:', tc.function.name, tc.function.arguments)
           let content: string
           try {
             content = runTool(tc.function.name, records.value, JSON.parse(tc.function.arguments))
+            console.debug('[AI] 工具结果:', tc.function.name, content)
           } catch (e) {
             content = JSON.stringify({ error: String(e) })
+            console.error('[AI] 工具执行失败:', tc.function.name, e)
           }
-          loop.push({ role: 'tool', tool_call_id: tc.id, content })
+          const toolMsg: ChatMessage = { role: 'tool', tool_call_id: tc.id, content }
+          loop.push(toolMsg)
+          messages.value.push(toolMsg)
         }
       } else {
         break
@@ -90,6 +101,7 @@ async function send(text?: string) {
 
     saveHistory(messages.value)
   } catch (e) {
+    console.error('[AI] 对话失败:', e)
     toast(e instanceof Error ? e.message : '请求失败，请检查模型配置')
   } finally {
     busy.value = false

@@ -41,7 +41,10 @@ function resolveUrl(baseUrl: string): string {
 }
 
 export async function streamChatCompletion(opts: StreamOptions): Promise<StreamResult> {
-  const res = await fetch(resolveUrl(opts.baseUrl), {
+  const url = resolveUrl(opts.baseUrl)
+  console.info(`[AI] POST ${url} | model=${opts.model} | messages=${opts.messages.length} | tools=${opts.tools.length}`)
+
+  const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -54,7 +57,15 @@ export async function streamChatCompletion(opts: StreamOptions): Promise<StreamR
       stream: true,
     }),
   })
-  if (!res.ok || !res.body) throw new Error(`请求失败: ${res.status}`)
+
+  if (!res.ok) {
+    let bodyText = ''
+    try { bodyText = await res.text() } catch { /* ignore */ }
+    console.error(`[AI] 请求失败 ${res.status}`, bodyText)
+    const excerpt = bodyText.slice(0, 300)
+    throw new Error(`请求失败: ${res.status}${excerpt ? ' — ' + excerpt : ''}`)
+  }
+  if (!res.body) throw new Error('响应无 body')
 
   const reader = res.body.getReader()
   const decoder = new TextDecoder()
@@ -80,11 +91,18 @@ export async function streamChatCompletion(opts: StreamOptions): Promise<StreamR
           content += delta.content
           opts.onDelta(delta.content)
         }
-        if (delta?.tool_calls) toolDeltas.push(...delta.tool_calls)
-      } catch { /* 忽略无法解析的行 */ }
+        if (delta?.tool_calls) {
+          toolDeltas.push(...delta.tool_calls)
+          console.debug('[AI] tool_calls delta:', delta.tool_calls)
+        }
+      } catch (e) {
+        console.warn('[AI] SSE 行解析失败:', trimmed, e)
+      }
     }
   }
 
   const toolCalls = accumulateToolCalls([], toolDeltas)
+  console.info(`[AI] 完成 | content=${content.length} chars | tool_calls=${toolCalls.length}`)
+  if (toolCalls.length) console.debug('[AI] 累积 tool_calls:', toolCalls)
   return { content, toolCalls }
 }
