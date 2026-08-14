@@ -1857,9 +1857,11 @@ async function send(text?: string) {
   busy.value = true
 
   const loop: ChatMessage[] = [{ role: 'system', content: SYSTEM_PROMPT }, ...messages.value]
-  let assistant: ChatMessage = { role: 'assistant', content: '' }
 
   for (let i = 0; i < 6; i++) {
+    const assistant: ChatMessage = { role: 'assistant', content: '' }
+    messages.value.push(assistant)
+
     const res = await streamChatCompletion({
       baseUrl: activeConfig.value.baseUrl,
       apiKey: activeConfig.value.apiKey,
@@ -1878,13 +1880,11 @@ async function send(text?: string) {
         catch (e) { content = JSON.stringify({ error: String(e) }) }
         loop.push({ role: 'tool', tool_call_id: tc.id, content })
       }
-      assistant = { role: 'assistant', content: '' }
     } else {
       break
     }
   }
 
-  messages.value.push(assistant)
   saveHistory(messages.value)
   busy.value = false
 }
