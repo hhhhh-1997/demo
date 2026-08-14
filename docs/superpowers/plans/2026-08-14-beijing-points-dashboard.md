@@ -471,8 +471,6 @@ Expected: FAIL，`Cannot find module './importer'`。
 import * as XLSX from 'xlsx'
 import type { Record } from '../types'
 
-const HEADER = ['公示编号', '姓名', '出生年月', '单位名称', '积分分值']
-
 export function deriveAge(birth: string, baseYear = 2026): number {
   const y = Number(String(birth).slice(0, 4))
   return Number.isFinite(y) ? baseYear - y : 0
@@ -964,8 +962,7 @@ Expected: FAIL。
 ```ts
 import type { Record } from '../types'
 import {
-  summarize, ageDistribution, ageMode, topUnits, unitSizeDistribution,
-  scoreDistribution, median,
+  summarize, ageDistribution, topUnits, unitSizeDistribution, scoreDistribution,
 } from '../utils/stats'
 
 export interface ToolDef {
