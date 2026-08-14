@@ -96,7 +96,15 @@ export interface ReviewCommand {
 /** 论证详情展示对象。 */
 export interface ReviewDetailVO {
   project: ProjectVO
-  review: ReviewRecordVO
+  review: ReviewRecordVO | null
+}
+
+/** 论证统计卡片（passRate 已为百分比数值）。 */
+export interface ReviewStats {
+  pending: number
+  passed: number
+  rejected: number
+  passRate: number
 }
 
 /** 审核记录展示对象。 */
@@ -121,7 +129,15 @@ export interface BatchAuditCommand {
 /** 审核详情展示对象。 */
 export interface AuditDetailVO {
   project: ProjectVO
-  audit: AuditRecordVO
+  audit: AuditRecordVO | null
+}
+
+/** 审核统计卡片（passRate 已为百分比数值）。 */
+export interface AuditStats {
+  pending: number
+  passed: number
+  rejected: number
+  passRate: number
 }
 
 /** 统一储备库详情展示对象。 */

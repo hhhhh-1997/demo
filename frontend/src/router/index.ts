@@ -41,13 +41,13 @@ const router = createRouter({
         {
           path: 'review',
           name: 'Review',
-          component: () => import('../views/placeholder/index.vue'),
+          component: () => import('../views/review/index.vue'),
           meta: { title: '储备项目论证', permissions: ['review:view'] },
         },
         {
           path: 'audit',
           name: 'Audit',
-          component: () => import('../views/placeholder/index.vue'),
+          component: () => import('../views/audit/index.vue'),
           meta: { title: '储备项目审核', permissions: ['audit:view'] },
         },
         {
