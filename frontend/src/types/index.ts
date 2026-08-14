@@ -152,3 +152,22 @@ export interface SysUserVO {
   status: number
   createTime: string
 }
+
+/** 菜单类型：M 目录 / C 菜单 / F 按钮。 */
+export type MenuType = 'M' | 'C' | 'F'
+
+/** 系统菜单树节点。 */
+export interface SysMenu {
+  id: number
+  menuName: string
+  parentId: number
+  path: string | null
+  component: string | null
+  perms: string | null
+  menuType: MenuType
+  icon: string | null
+  sort: number
+  visible: number
+  status: number
+  children: SysMenu[] | null
+}

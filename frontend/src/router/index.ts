@@ -23,9 +23,58 @@ const router = createRouter({
     },
     {
       path: '/',
-      name: 'Home',
-      component: () => import('../views/home/index.vue'),
-      meta: { title: '首页', requiresAuth: true },
+      component: () => import('../views/layout/index.vue'),
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          name: 'Home',
+          component: () => import('../views/home/index.vue'),
+          meta: { title: '首页', requiresAuth: true },
+        },
+        {
+          path: 'project',
+          name: 'Project',
+          component: () => import('../views/placeholder/index.vue'),
+          meta: { title: '储备项目维护', permissions: ['project:*'] },
+        },
+        {
+          path: 'review',
+          name: 'Review',
+          component: () => import('../views/placeholder/index.vue'),
+          meta: { title: '储备项目论证', permissions: ['review:*'] },
+        },
+        {
+          path: 'audit',
+          name: 'Audit',
+          component: () => import('../views/placeholder/index.vue'),
+          meta: { title: '储备项目审核', permissions: ['audit:*'] },
+        },
+        {
+          path: 'reserve',
+          name: 'Reserve',
+          component: () => import('../views/placeholder/index.vue'),
+          meta: { title: '统一储备库', permissions: ['reserve:*'] },
+        },
+        {
+          path: 'system/user',
+          name: 'SystemUser',
+          component: () => import('../views/placeholder/index.vue'),
+          meta: { title: '用户管理', permissions: ['system:user'] },
+        },
+        {
+          path: 'system/role',
+          name: 'SystemRole',
+          component: () => import('../views/placeholder/index.vue'),
+          meta: { title: '角色管理', permissions: ['system:role'] },
+        },
+        {
+          path: 'system/menu',
+          name: 'SystemMenu',
+          component: () => import('../views/placeholder/index.vue'),
+          meta: { title: '菜单管理', permissions: ['system:menu'] },
+        },
+      ],
     },
   ],
 })
