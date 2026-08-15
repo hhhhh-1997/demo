@@ -44,6 +44,16 @@ body {
   background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.5);
   color: #FFFFFF; font-size: 12px; font-weight: 600; cursor: pointer;
 }
+.nav-action-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; padding: 0;
+  color: #FFFFFF; background: none; border: none; cursor: pointer;
+  border-radius: 4px;
+  opacity: 0.9;
+  transition: background 0.2s ease, opacity 0.15s ease;
+}
+.nav-action-btn:hover { background: rgba(255,255,255,0.14); opacity: 1; }
+.nav-action-btn svg { width: 16px; height: 16px; display: block; }
 
 /* 页面主体 */
 .page-main { padding: 20px 24px 40px; max-width: 1720px; margin: 0 auto; }
@@ -84,3 +94,16 @@ body {
 /* 表格冻结列阴影 + 数值对齐 + 空值淡色 */
 .perf-table { width: 100%; }
 .cell-muted { color: #BDBDBD; }
+
+/* 暗色主题（Element Plus dark css-vars 提供组件级变量，这里补齐自定义样式） */
+html.dark body { background: var(--el-bg-color-page); color: var(--el-text-color-regular); }
+html.dark .card { background: var(--el-bg-color); border: 1px solid var(--el-border-color); }
+html.dark .page-title { color: var(--el-text-color-primary); }
+html.dark .form-label { color: var(--el-text-color-regular); }
+html.dark .result-count { color: var(--el-text-color-secondary); }
+html.dark .result-count strong { color: var(--el-text-color-primary); }
+html.dark .result-hint { color: var(--el-text-color-secondary); }
+html.dark .breadcrumb a { color: var(--el-text-color-secondary); }
+html.dark .breadcrumb a:hover { color: var(--el-color-primary); }
+html.dark .breadcrumb-current { color: var(--el-text-color-primary); }
+html.dark .cell-muted { color: var(--el-text-color-placeholder); }
