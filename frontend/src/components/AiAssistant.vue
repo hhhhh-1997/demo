@@ -19,6 +19,7 @@ const activeConfig = computed(() => configs.value.find(c => c.id === selectedId.
 const messages = ref<ChatMessage[]>(loadHistory())
 const input = ref('')
 const busy = ref(false)
+const streaming = ref<ChatMessage | null>(null)
 
 const chatBody = ref<HTMLDivElement>()
 
@@ -67,6 +68,7 @@ async function send(text?: string) {
     for (let i = 0; i < 6; i++) {
       const assistant = reactive<ChatMessage>({ role: 'assistant', content: '' })
       messages.value.push(assistant)
+      streaming.value = assistant
 
       const res = await streamChatCompletion({
         baseUrl: cfg.baseUrl,
@@ -105,11 +107,13 @@ async function send(text?: string) {
     toast(e instanceof Error ? e.message : '请求失败，请检查模型配置')
   } finally {
     busy.value = false
+    streaming.value = null
   }
 }
 
 function clearChat() {
   messages.value = []
+  streaming.value = null
   clearHistory()
 }
 </script>
@@ -136,9 +140,11 @@ function clearChat() {
         <div v-for="(msg, i) in visibleMessages" :key="i" class="msg" :class="msg.role === 'user' ? 'user' : 'ai'">
           <div class="bubble">
             {{ msg.content }}
+            <span v-if="msg === streaming && !msg.content" class="typing"><i></i><i></i><i></i></span>
+            <span v-else-if="msg === streaming" class="cursor" aria-hidden="true"></span>
             <span v-if="msg.tool_calls?.length" class="src">调用工具：{{ toolNames(msg) }}</span>
           </div>
-          <div class="meta">{{ msg.role === 'user' ? '你' : 'AI 助手' }}</div>
+          <div class="meta">{{ msg.role === 'user' ? '你' : msg === streaming ? 'AI 助手 · 正在生成' : 'AI 助手' }}</div>
         </div>
       </div>
       <div class="chat-input">
@@ -190,6 +196,19 @@ function clearChat() {
 .msg .bubble {
   white-space: pre-wrap;
   word-break: break-word;
+}
+.cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: var(--color-primary);
+  animation: cursor-blink 1s step-end infinite;
+}
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 .chat-input textarea:disabled {
   opacity: 0.6;
