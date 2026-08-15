@@ -1,6 +1,5 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import { useThemeStore } from './stores/theme'
 import router from './router'
 import { permission } from './directives/permission'
 import ElementPlus from 'element-plus'
@@ -21,7 +20,6 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 const pinia = createPinia()
 app.use(pinia)
-useThemeStore(pinia)
 app.use(router)
 app.use(ElementPlus)
 app.mount('#app')

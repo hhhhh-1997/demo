@@ -29,3 +29,8 @@ a:hover {
 *::after {
   box-sizing: border-box;
 }
+
+/* 表格表头不换行（Element Plus 默认 .cell 允许换行，长表头如「投资金额（万元）」会折成两行）。 */
+.el-table th.el-table__cell .cell {
+  white-space: nowrap;
+}

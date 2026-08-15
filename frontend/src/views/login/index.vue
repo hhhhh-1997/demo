@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useUserStore } from '../../stores/user'
-import { useThemeStore } from '../../stores/theme'
-import logoDefault from '../../assets/logo-default.png'
 import logoWhite from '../../assets/logo-white.png'
 
 /** 登录表单模型。 */
@@ -16,9 +14,6 @@ interface LoginFormModel {
 
 const router = useRouter()
 const userStore = useUserStore()
-const themeStore = useThemeStore()
-
-const logo = computed(() => (themeStore.theme === 'dark' ? logoWhite : logoDefault))
 
 const formRef = ref<FormInstance>()
 const loading = ref(false)
@@ -56,7 +51,7 @@ async function handleLogin(): Promise<void> {
   <div class="login-page">
     <div class="login-card">
       <div class="login-logo">
-        <img class="login-logo-img" :src="logo" alt="logo" />
+        <img class="login-logo-img" :src="logoWhite" alt="logo" />
       </div>
       <h1 class="login-title">储备项目管理系统</h1>
       <p class="login-subtitle">综合计划储备项目管理平台</p>

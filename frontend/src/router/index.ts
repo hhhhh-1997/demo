@@ -79,12 +79,19 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const userStore = useUserStore()
   const hasToken = !!userStore.token
 
   if (to.meta.requiresAuth && !hasToken) {
     return { path: '/login', query: { redirect: to.fullPath } }
+  }
+  if (to.meta.requiresAuth && hasToken && !userStore.user) {
+    try {
+      await userStore.fetchMe()
+    } catch {
+      return { path: '/login' }
+    }
   }
   if (to.meta.permissions && to.meta.permissions.length > 0) {
     const allowed = to.meta.permissions.some((perm) => userStore.hasPermi(perm))

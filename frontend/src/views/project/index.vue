@@ -532,7 +532,7 @@ onMounted(() => {
             <el-tag size="small">{{ row.projectType }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="投资金额（万元）" width="140" align="right">
+        <el-table-column label="投资金额（万元）" width="160" align="right">
           <template #default="{ row }">
             {{ yuanToWan(row.investmentAmount) }}
           </template>
@@ -598,7 +598,7 @@ onMounted(() => {
       width="560px"
       :close-on-click-modal="false"
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="150px">
         <el-form-item label="项目名称" prop="projectName">
           <el-input v-model="form.projectName" placeholder="请输入项目名称" maxlength="100" clearable />
         </el-form-item>

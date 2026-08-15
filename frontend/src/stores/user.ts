@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { login as loginApi, logout as logoutApi } from '../api/auth'
+import { login as loginApi, logout as logoutApi, getMe } from '../api/auth'
 import type { LoginUser } from '../types'
 
 /** 系统管理员角色标识。 */
@@ -52,6 +52,19 @@ export const useUserStore = defineStore('user', () => {
     localStorage.setItem(PERMISSIONS_KEY, JSON.stringify(permissions.value))
   }
 
+  /** 刷新后从后端恢复当前用户信息（token 已持久化，仅回填 user/roles/permissions）。 */
+  async function fetchMe(): Promise<void> {
+    if (!token.value) {
+      return
+    }
+    const res = await getMe()
+    user.value = { ...res.data, token: token.value }
+    roles.value = res.data.roles ?? []
+    permissions.value = res.data.permissions ?? []
+    localStorage.setItem(ROLES_KEY, JSON.stringify(roles.value))
+    localStorage.setItem(PERMISSIONS_KEY, JSON.stringify(permissions.value))
+  }
+
   /** 退出登录：清空本地状态与持久化数据。 */
   async function logout(): Promise<void> {
     try {
@@ -75,5 +88,5 @@ export const useUserStore = defineStore('user', () => {
     return permissions.value.includes(perm)
   }
 
-  return { token, user, roles, permissions, login, logout, hasPermi }
+  return { token, user, roles, permissions, login, logout, fetchMe, hasPermi }
 })

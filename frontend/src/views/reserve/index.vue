@@ -356,7 +356,7 @@ onMounted(() => {
             <el-tag size="small">{{ row.projectType }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="投资金额（万元）" width="140" align="right">
+        <el-table-column label="投资金额（万元）" width="160" align="right">
           <template #default="{ row }">
             {{ yuanToWan(row.investmentAmount) }}
           </template>

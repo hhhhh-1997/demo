@@ -1,25 +1,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Sunny, Moon, UserFilled, ArrowDown } from '@element-plus/icons-vue'
-import { useThemeStore } from '../../../stores/theme'
+import { UserFilled, ArrowDown } from '@element-plus/icons-vue'
 import { useUserStore } from '../../../stores/user'
-import logoDefault from '../../../assets/logo-default.png'
 import logoWhite from '../../../assets/logo-white.png'
 
 /**
- * 顶栏：项目 logo、主题切换与用户下拉菜单（退出登录）。
+ * 顶栏：项目 logo 与用户下拉菜单（退出登录）。
  *
  * @author demo
  * @since 2026-08-14
  */
 const router = useRouter()
-const themeStore = useThemeStore()
 const userStore = useUserStore()
 
 const nickname = computed(() => userStore.user?.nickname ?? '未登录')
-
-const logo = computed(() => (themeStore.theme === 'dark' ? logoWhite : logoDefault))
 
 /** 退出登录并跳转登录页。 */
 async function handleLogout(): Promise<void> {
@@ -31,22 +26,10 @@ async function handleLogout(): Promise<void> {
 <template>
   <div class="header-bar">
     <div class="header-logo">
-      <img class="header-logo-img" :src="logo" alt="logo" />
+      <img class="header-logo-img" :src="logoWhite" alt="logo" />
       <span class="header-title">综合计划储备项目管理</span>
     </div>
     <div class="header-actions">
-      <el-button
-        class="theme-toggle"
-        text
-        circle
-        :aria-label="themeStore.theme === 'dark' ? '切换到浅色主题' : '切换到深色主题'"
-        @click="themeStore.toggle()"
-      >
-        <el-icon>
-          <Sunny v-if="themeStore.theme === 'dark'" />
-          <Moon v-else />
-        </el-icon>
-      </el-button>
       <el-dropdown>
         <span class="header-user">
           <el-icon><UserFilled /></el-icon>
@@ -89,11 +72,6 @@ async function handleLogout(): Promise<void> {
   display: flex;
   align-items: center;
   gap: 1rem;
-}
-
-.theme-toggle {
-  color: var(--text-secondary);
-  font-size: 1.1rem;
 }
 
 .header-user {
