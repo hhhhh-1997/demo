@@ -122,7 +122,8 @@ function toApiStep(step: StepEditorModel): StepItem {
   try {
     body = JSON.parse(step.body || '{}') as Record<string, unknown>
   } catch {
-    body = {}
+    ElMessage.error(`步骤「${step.name || '未命名'}」的 Body JSON 格式错误`)
+    throw new Error('Body JSON 格式错误')
   }
   return {
     name: step.name,
