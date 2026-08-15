@@ -142,21 +142,22 @@ onMounted(query)
   </section>
 
   <!-- 数据表格区 -->
-  <section class="card">
+  <section class="card table-card">
     <div class="table-toolbar">
       <span class="result-count">共 <strong>{{ rows.length }}</strong> 条记录</span>
       <span class="result-hint">默认不分页 · 表头固定 · 左侧姓名列冻结</span>
     </div>
 
-    <el-table
-      v-if="!error"
-      v-loading="loading"
-      :data="displayRows"
-      border
-      height="62vh"
-      class="perf-table"
-      @sort-change="handleSortChange"
-    >
+    <div class="table-body">
+      <el-table
+        v-if="!error"
+        v-loading="loading"
+        :data="displayRows"
+        border
+        height="100%"
+        class="perf-table"
+        @sort-change="handleSortChange"
+      >
       <template #empty>
         <el-empty description="暂无数据" :image-size="80">
           <el-button type="primary" @click="reset">重置条件</el-button>
@@ -190,10 +191,11 @@ onMounted(query)
       </el-table-column>
     </el-table>
 
-    <el-result v-else status="error" title="查询失败" :sub-title="error">
-      <template #extra>
-        <el-button type="primary" @click="query">重试</el-button>
-      </template>
-    </el-result>
+      <el-result v-else status="error" title="查询失败" :sub-title="error">
+        <template #extra>
+          <el-button type="primary" @click="query">重试</el-button>
+        </template>
+      </el-result>
+    </div>
   </section>
 </template>
