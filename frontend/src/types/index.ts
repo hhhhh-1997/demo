@@ -264,3 +264,118 @@ export interface SysMenuSaveDTO {
   visible?: number
   status?: number
 }
+
+/** 断言操作类型。 */
+export type AssertOp = 'EQUALS' | 'CONTAINS' | 'EXISTS'
+
+/** 断言类型。 */
+export type AssertType = 'STATUS' | 'JSON'
+
+/** 单个断言。 */
+export interface AssertItem {
+  type: AssertType
+  expected?: string
+  jsonPath?: string
+  op?: AssertOp
+}
+
+/** 变量提取。 */
+export interface ExtractItem {
+  name: string
+  jsonPath: string
+}
+
+/** 步骤（编排器与后端共用的扁平模型）。 */
+export interface StepItem {
+  id?: number
+  stepOrder?: number
+  name: string
+  method: string
+  path: string
+  headers: Record<string, string>
+  query: Record<string, string>
+  body: Record<string, unknown>
+  asserts: AssertItem[]
+  extracts: ExtractItem[]
+}
+
+/** 场景展示对象。 */
+export interface ScenarioVO {
+  id: number
+  name: string
+  description: string
+  baseUrl: string
+  variables: Record<string, unknown>
+  createTime: string
+  steps: StepItem[] | null
+}
+
+/** 场景保存请求体。 */
+export interface ScenarioSaveDTO {
+  name: string
+  description?: string
+  baseUrl?: string
+  variables: Record<string, unknown>
+  steps: StepItem[]
+}
+
+/** 场景分页查询条件。 */
+export interface ScenarioQuery {
+  pageNum?: number
+  pageSize?: number
+  name?: string
+}
+
+/** 运行状态：0 运行中 / 1 成功 / 2 失败。 */
+export type RunStatus = 0 | 1 | 2
+
+/** 步骤结果状态：0 通过 / 1 失败 / 2 跳过。 */
+export type StepStatus = 0 | 1 | 2
+
+/** 运行记录展示对象。 */
+export interface RunVO {
+  id: number
+  scenarioId: number
+  status: RunStatus
+  failStepId: number | null
+  errorMsg: string | null
+  startTime: string
+  endTime: string | null
+  triggerBy: number
+  createTime: string
+}
+
+/** 运行分页查询条件。 */
+export interface RunQuery {
+  pageNum?: number
+  pageSize?: number
+  scenarioId?: number
+  status?: RunStatus
+}
+
+/** 步骤结果展示对象。 */
+export interface StepResultVO {
+  id: number
+  stepId: number
+  stepOrder: number
+  name: string
+  status: StepStatus
+  requestSnapshot: string
+  responseSnapshot: string
+  assertDetail: string | null
+  errorMsg: string | null
+  startTime: string
+  endTime: string | null
+}
+
+/** 运行详情展示对象。 */
+export interface RunDetailVO {
+  id: number
+  scenarioId: number
+  status: RunStatus
+  failStepId: number | null
+  errorMsg: string | null
+  startTime: string
+  endTime: string | null
+  steps: StepResultVO[]
+}

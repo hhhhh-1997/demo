@@ -69,6 +69,18 @@ const router = createRouter({
           meta: { title: '角色管理', permissions: ['system:role'] },
         },
         {
+          path: 'autotest/scenario',
+          name: 'AutotestScenario',
+          component: () => import('../views/autotest/scenario/index.vue'),
+          meta: { title: '自动化测试', permissions: ['autotest:scenario:list'] },
+        },
+        {
+          path: 'autotest/run/:id',
+          name: 'AutotestRunDetail',
+          component: () => import('../views/autotest/run/detail.vue'),
+          meta: { title: '运行结果', permissions: ['autotest:scenario:list'] },
+        },
+        {
           path: 'system/menu',
           name: 'SystemMenu',
           component: () => import('../views/system/menu/index.vue'),
