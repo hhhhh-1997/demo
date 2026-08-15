@@ -215,3 +215,85 @@ a:hover {
   padding: 20px 24px;
   border-top: 1px solid var(--border-color);
 }
+
+/* ===== 详情弹窗：两列字段行网格（复刻原型 form-grid + field） ===== */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.detail-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.detail-field > label {
+  flex-shrink: 0;
+  min-width: 70px;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.detail-field > .detail-value {
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.detail-field--full {
+  grid-column: 1 / -1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  border-bottom: none;
+}
+
+.detail-field--full > label {
+  min-width: 0;
+}
+
+.detail-box {
+  width: 100%;
+  padding: 10px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  min-height: 40px;
+  color: var(--text-primary);
+}
+
+/* ===== 表单弹窗：两列网格 + label 在上 ===== */
+.form-grid.el-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.form-grid.el-form .el-form-item {
+  margin-bottom: 0;
+}
+
+.form-grid .form-item--full {
+  grid-column: 1 / -1;
+}
+
+.form-grid .el-input-number {
+  width: 100%;
+}
+
+.form-grid .el-input-number .el-input__inner {
+  text-align: left;
+}
+
+.required {
+  color: var(--danger-color);
+}
+
+/* 论证检查项：单选行间距（复刻原型 .review-option） */
+.review-option.el-radio-group .el-radio {
+  margin-right: 24px;
+}

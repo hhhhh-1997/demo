@@ -14,7 +14,7 @@ interface Props {
   value: number | string
   /** 配色。 */
   color: StatColor
-  /** Element Plus 图标组件名。 */
+  /** FontAwesome 图标类名（如 fa-database）。 */
   icon: string
 }
 
@@ -28,7 +28,7 @@ defineProps<Props>()
       <p class="stat-title">{{ title }}</p>
     </div>
     <div class="stat-icon">
-      <el-icon><component :is="icon" /></el-icon>
+      <i class="fas" :class="icon"></i>
     </div>
   </div>
 </template>

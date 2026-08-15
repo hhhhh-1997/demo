@@ -2,7 +2,6 @@
 import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { Delete, Download, Edit, Plus, Promotion } from '@element-plus/icons-vue'
 import { yuanToWan } from '../../utils/format'
 import {
   create as createProject,
@@ -426,16 +425,16 @@ onMounted(() => {
         <p class="page-description">维护储备项目，支持新增、编辑、删除及提报操作</p>
       </div>
       <button v-permission="'project:add'" class="btn btn-primary" @click="openCreate">
-        <el-icon><Plus /></el-icon>
+        <i class="fas fa-plus"></i>
         新增项目
       </button>
     </div>
 
     <div class="stats-grid">
-      <StatCard title="项目总数" :value="stats.total" color="primary" icon="Layers" />
-      <StatCard title="草稿（未提报）" :value="stats.draft" color="warning" icon="EditPen" />
-      <StatCard title="论证退回" :value="stats.reviewRejected" color="danger" icon="CircleClose" />
-      <StatCard title="审核退回" :value="stats.auditRejected" color="info" icon="Warning" />
+      <StatCard title="项目总数" :value="stats.total" color="primary" icon="fa-layer-group" />
+      <StatCard title="草稿（未提报）" :value="stats.draft" color="warning" icon="fa-edit" />
+      <StatCard title="论证退回" :value="stats.reviewRejected" color="danger" icon="fa-times-circle" />
+      <StatCard title="审核退回" :value="stats.auditRejected" color="info" icon="fa-undo" />
     </div>
 
     <div class="card">
@@ -511,11 +510,11 @@ onMounted(() => {
             class="btn btn-sm btn-success"
             @click="handleBatchSubmit"
           >
-            <el-icon><Promotion /></el-icon>
+            <i class="fas fa-paper-plane"></i>
             批量提报
           </button>
           <button v-permission="'project:export'" class="btn btn-sm btn-outline" @click="handleExport">
-            <el-icon><Download /></el-icon>
+            <i class="fas fa-file-export"></i>
             导出
           </button>
         </div>
@@ -561,7 +560,7 @@ onMounted(() => {
                 title="提报"
                 @click="handleSubmit(row)"
               >
-                <el-icon><Promotion /></el-icon>
+                <i class="fas fa-paper-plane"></i>
               </button>
               <button
                 v-if="isEditable(row.status)"
@@ -570,7 +569,7 @@ onMounted(() => {
                 title="编辑"
                 @click="openEdit(row)"
               >
-                <el-icon><Edit /></el-icon>
+                <i class="fas fa-edit"></i>
               </button>
               <button
                 v-if="isDeletable(row.status)"
@@ -579,7 +578,7 @@ onMounted(() => {
                 title="删除"
                 @click="handleDelete(row)"
               >
-                <el-icon><Delete /></el-icon>
+                <i class="fas fa-trash"></i>
               </button>
             </div>
           </template>
@@ -600,8 +599,8 @@ onMounted(() => {
       width="560px"
       :close-on-click-modal="false"
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="150px">
-        <el-form-item label="项目名称" prop="projectName">
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top" class="form-grid">
+        <el-form-item label="项目名称" prop="projectName" class="form-item--full">
           <el-input v-model="form.projectName" placeholder="请输入项目名称" maxlength="100" clearable />
         </el-form-item>
         <el-form-item label="二级分类" prop="projectType">
@@ -694,24 +693,33 @@ onMounted(() => {
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 1rem;
-  padding: 1rem;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .filter-item {
   display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-item :deep(.el-input),
+.filter-item :deep(.el-select) {
+  width: 180px;
 }
 
 .filter-label {
+  white-space: nowrap;
   color: var(--text-secondary);
   font-size: 0.85rem;
 }
 
-.filter-search {
-  min-width: 220px;
+.filter-search :deep(.el-input) {
+  width: 220px;
 }
 
 .card-header {

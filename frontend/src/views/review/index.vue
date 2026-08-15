@@ -2,7 +2,6 @@
 import { nextTick, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { CircleCheck, View } from '@element-plus/icons-vue'
 import { yuanToWan } from '../../utils/format'
 import { projectTypeDict } from '../../api/project'
 import { detail as reviewDetail, execute as executeReview, page as pageReview, stats as reviewStats } from '../../api/review'
@@ -295,10 +294,10 @@ onMounted(() => {
     </div>
 
     <div class="stats-grid">
-      <StatCard title="待论证" :value="stats.pending" color="warning" icon="Clock" />
-      <StatCard title="已通过论证" :value="stats.passed" color="success" icon="CircleCheck" />
-      <StatCard title="论证不通过" :value="stats.rejected" color="danger" icon="CircleClose" />
-      <StatCard title="论证通过率" :value="formatRate(stats.passRate)" color="info" icon="TrendCharts" />
+      <StatCard title="待论证" :value="stats.pending" color="primary" icon="fa-clock" />
+      <StatCard title="已通过论证" :value="stats.passed" color="success" icon="fa-check-circle" />
+      <StatCard title="论证不通过" :value="stats.rejected" color="danger" icon="fa-times-circle" />
+      <StatCard title="论证通过率" :value="formatRate(stats.passRate)" color="info" icon="fa-chart-pie" />
     </div>
 
     <div class="card">
@@ -405,7 +404,7 @@ onMounted(() => {
                 title="论证"
                 @click="openReview(row)"
               >
-                <el-icon><CircleCheck /></el-icon>
+                <i class="fas fa-check-circle"></i>
               </button>
               <button
                 v-permission="'review:view'"
@@ -413,7 +412,7 @@ onMounted(() => {
                 title="查看详情"
                 @click="openDetail(row)"
               >
-                <el-icon><View /></el-icon>
+                <i class="fas fa-eye"></i>
               </button>
             </div>
           </template>
@@ -434,39 +433,49 @@ onMounted(() => {
       width="640px"
       :close-on-click-modal="false"
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="项目编码">
-          <span class="readonly-text">{{ reviewingRow?.projectCode }}</span>
-        </el-form-item>
-        <el-form-item label="项目名称">
-          <span class="readonly-text">{{ reviewingRow?.projectName }}</span>
-        </el-form-item>
-        <el-divider content-position="left">论证检查项</el-divider>
-        <el-form-item label="信息完整性">
-          <el-radio-group v-model="form.infoComplete">
+      <div class="detail-grid">
+        <div class="detail-field">
+          <label>项目编码</label>
+          <span class="detail-value">{{ reviewingRow?.projectCode }}</span>
+        </div>
+        <div class="detail-field">
+          <label>项目名称</label>
+          <span class="detail-value">{{ reviewingRow?.projectName }}</span>
+        </div>
+      </div>
+      <el-divider content-position="left">论证检查项</el-divider>
+      <div class="detail-grid">
+        <div class="detail-field">
+          <label>信息完整性</label>
+          <el-radio-group v-model="form.infoComplete" class="review-option">
             <el-radio value="完整">完整</el-radio>
             <el-radio value="不完整">不完整</el-radio>
           </el-radio-group>
-        </el-form-item>
-        <el-form-item label="三重一大">
-          <el-radio-group v-model="form.threeImportant">
+        </div>
+        <div class="detail-field">
+          <label>三重一大</label>
+          <el-radio-group v-model="form.threeImportant" class="review-option">
             <el-radio value="符合">符合</el-radio>
             <el-radio value="不符合">不符合</el-radio>
           </el-radio-group>
-        </el-form-item>
-        <el-form-item label="拆分立项">
-          <el-radio-group v-model="form.splitProject">
+        </div>
+        <div class="detail-field">
+          <label>拆分立项</label>
+          <el-radio-group v-model="form.splitProject" class="review-option">
             <el-radio value="无">无</el-radio>
             <el-radio value="存在">存在</el-radio>
           </el-radio-group>
-        </el-form-item>
-        <el-form-item label="界面混淆">
-          <el-radio-group v-model="form.interfaceConfusion">
+        </div>
+        <div class="detail-field">
+          <label>界面混淆</label>
+          <el-radio-group v-model="form.interfaceConfusion" class="review-option">
             <el-radio value="无">无</el-radio>
             <el-radio value="存在">存在</el-radio>
           </el-radio-group>
-        </el-form-item>
-        <el-form-item label="论证意见" prop="opinion">
+        </div>
+      </div>
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top" class="form-grid">
+        <el-form-item label="论证意见" prop="opinion" class="form-item--full">
           <el-input
             v-model="form.opinion"
             type="textarea"
@@ -475,7 +484,7 @@ onMounted(() => {
             maxlength="500"
           />
         </el-form-item>
-        <el-form-item label="论证结果" prop="result">
+        <el-form-item label="论证结果" prop="result" class="form-item--full">
           <el-select v-model="form.result" placeholder="请选择" style="width: 100%">
             <el-option label="通过" value="通过" />
             <el-option label="不通过" value="不通过" />
@@ -489,49 +498,71 @@ onMounted(() => {
     </el-dialog>
 
     <el-dialog v-model="detailDialogVisible" title="论证详情" width="680px">
-      <el-descriptions v-loading="detailLoading" :column="2" border>
-        <el-descriptions-item label="项目编码">{{ detailData?.project.projectCode ?? '-' }}</el-descriptions-item>
-        <el-descriptions-item label="项目名称">{{ detailData?.project.projectName ?? '-' }}</el-descriptions-item>
-        <el-descriptions-item label="二级分类">{{ detailData?.project.projectType ?? '-' }}</el-descriptions-item>
-        <el-descriptions-item label="投资金额（万元）">
-          {{ detailData ? yuanToWan(detailData.project.investmentAmount) : '-' }}
-        </el-descriptions-item>
-        <el-descriptions-item label="所属单位">{{ detailData?.project.deptName ?? '-' }}</el-descriptions-item>
-        <el-descriptions-item label="论证状态">
+      <div v-loading="detailLoading" class="detail-grid">
+        <div class="detail-field">
+          <label>项目编码</label>
+          <span class="detail-value">{{ detailData?.project.projectCode ?? '-' }}</span>
+        </div>
+        <div class="detail-field">
+          <label>项目名称</label>
+          <span class="detail-value">{{ detailData?.project.projectName ?? '-' }}</span>
+        </div>
+        <div class="detail-field">
+          <label>二级分类</label>
+          <span class="detail-value">{{ detailData?.project.projectType ?? '-' }}</span>
+        </div>
+        <div class="detail-field">
+          <label>投资金额（万元）</label>
+          <span class="detail-value">{{ detailData ? yuanToWan(detailData.project.investmentAmount) : '-' }}</span>
+        </div>
+        <div class="detail-field">
+          <label>所属单位</label>
+          <span class="detail-value">{{ detailData?.project.deptName ?? '-' }}</span>
+        </div>
+        <div class="detail-field">
+          <label>论证状态</label>
           <StatusTag v-if="detailData" :type="reviewStatusTagType(detailData.project.status)">
             {{ reviewStatusLabel(detailData.project.status) }}
           </StatusTag>
-          <span v-else>-</span>
-        </el-descriptions-item>
-        <el-descriptions-item label="信息完整性">
+          <span v-else class="detail-value">-</span>
+        </div>
+        <div class="detail-field">
+          <label>信息完整性</label>
           <StatusTag v-if="detailData?.review" :type="checkItemTagType('infoComplete', detailData.review.infoComplete)">
             {{ detailData.review.infoComplete }}
           </StatusTag>
           <span v-else class="empty-value">—</span>
-        </el-descriptions-item>
-        <el-descriptions-item label="三重一大">
+        </div>
+        <div class="detail-field">
+          <label>三重一大</label>
           <StatusTag v-if="detailData?.review" :type="checkItemTagType('threeImportant', detailData.review.threeImportant)">
             {{ detailData.review.threeImportant }}
           </StatusTag>
           <span v-else class="empty-value">—</span>
-        </el-descriptions-item>
-        <el-descriptions-item label="拆分立项">
+        </div>
+        <div class="detail-field">
+          <label>拆分立项</label>
           <StatusTag v-if="detailData?.review" :type="checkItemTagType('splitProject', detailData.review.splitProject)">
             {{ detailData.review.splitProject }}
           </StatusTag>
           <span v-else class="empty-value">—</span>
-        </el-descriptions-item>
-        <el-descriptions-item label="界面混淆">
+        </div>
+        <div class="detail-field">
+          <label>界面混淆</label>
           <StatusTag v-if="detailData?.review" :type="checkItemTagType('interfaceConfusion', detailData.review.interfaceConfusion)">
             {{ detailData.review.interfaceConfusion }}
           </StatusTag>
           <span v-else class="empty-value">—</span>
-        </el-descriptions-item>
-        <el-descriptions-item label="论证时间">{{ formatDateTime(detailData?.review?.reviewTime ?? '') }}</el-descriptions-item>
-        <el-descriptions-item label="论证意见" :span="2">
-          {{ detailData?.review?.opinion || '—' }}
-        </el-descriptions-item>
-      </el-descriptions>
+        </div>
+        <div class="detail-field">
+          <label>论证时间</label>
+          <span class="detail-value">{{ formatDateTime(detailData?.review?.reviewTime ?? '') }}</span>
+        </div>
+        <div class="detail-field detail-field--full">
+          <label>论证意见</label>
+          <div class="detail-box">{{ detailData?.review?.opinion || '—' }}</div>
+        </div>
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -577,19 +608,27 @@ onMounted(() => {
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 1rem;
-  padding: 1rem;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .filter-item {
   display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  min-width: 180px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-item :deep(.el-input),
+.filter-item :deep(.el-select) {
+  width: 180px;
 }
 
 .filter-label {
+  white-space: nowrap;
   color: var(--text-secondary);
   font-size: 0.85rem;
 }
@@ -610,10 +649,6 @@ onMounted(() => {
 
 .empty-value {
   color: var(--text-muted);
-}
-
-.readonly-text {
-  color: var(--text-primary);
 }
 
 @media (max-width: 1100px) {

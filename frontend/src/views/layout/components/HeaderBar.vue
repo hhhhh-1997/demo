@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowDown, Moon, OfficeBuilding, Sunny, UserFilled } from '@element-plus/icons-vue'
 import { useUserStore } from '../../../stores/user'
 import { useThemeStore } from '../../../stores/theme'
 
@@ -18,7 +17,7 @@ const themeStore = useThemeStore()
 const nickname = computed(() => userStore.user?.nickname ?? '未登录')
 
 /** 主题切换按钮图标：暗色显示太阳（切亮），亮色显示月亮（切暗）。 */
-const themeIcon = computed(() => (themeStore.theme === 'dark' ? Sunny : Moon))
+const themeIcon = computed(() => (themeStore.theme === 'dark' ? 'fa-sun' : 'fa-moon'))
 
 /** 退出登录并跳转登录页。 */
 async function handleLogout(): Promise<void> {
@@ -30,18 +29,18 @@ async function handleLogout(): Promise<void> {
 <template>
   <div class="header-bar">
     <div class="header-logo">
-      <el-icon class="header-logo-icon"><OfficeBuilding /></el-icon>
+      <i class="fas fa-warehouse header-logo-icon"></i>
       <span class="header-title">综合计划储备项目管理</span>
     </div>
     <div class="header-actions">
       <button class="theme-toggle" title="切换主题" @click="themeStore.toggle()">
-        <el-icon><component :is="themeIcon" /></el-icon>
+        <i class="fas" :class="themeIcon"></i>
       </button>
       <el-dropdown>
         <span class="header-user">
-          <el-icon class="header-user-icon"><UserFilled /></el-icon>
+          <i class="fas fa-user-circle header-user-icon"></i>
           <span class="header-nickname">{{ nickname }}</span>
-          <el-icon class="header-user-arrow"><ArrowDown /></el-icon>
+          <i class="fas fa-chevron-down header-user-arrow"></i>
         </span>
         <template #dropdown>
           <el-dropdown-menu>

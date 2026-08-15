@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Download, Promotion, View } from '@element-plus/icons-vue'
 import { yuanToWan, yuanToYi } from '../../utils/format'
 import { deptTree, projectTypeDict } from '../../api/project'
 import {
@@ -250,10 +249,10 @@ onMounted(() => {
     </div>
 
     <div class="stats-grid">
-      <StatCard title="储备库项目总数" :value="stats.total" color="primary" icon="Collection" />
-      <StatCard title="总投资（亿元）" :value="yuanToYi(stats.totalAmountYuan)" color="success" icon="Coin" />
-      <StatCard title="待下达" :value="stats.pending" color="warning" icon="Clock" />
-      <StatCard title="已下达" :value="stats.issued" color="info" icon="Promotion" />
+      <StatCard title="储备库项目总数" :value="stats.total" color="primary" icon="fa-database" />
+      <StatCard title="总投资（亿元）" :value="yuanToYi(stats.totalAmountYuan)" color="success" icon="fa-coins" />
+      <StatCard title="已下达" :value="stats.issued" color="warning" icon="fa-paper-plane" />
+      <StatCard title="待下达" :value="stats.pending" color="info" icon="fa-clock" />
     </div>
 
     <div class="chart-grid">
@@ -344,7 +343,7 @@ onMounted(() => {
         <h3 class="card-title">项目列表</h3>
         <div class="card-actions">
           <button v-permission="'reserve:export'" class="btn btn-sm btn-outline" @click="handleExport">
-            <el-icon><Download /></el-icon>
+            <i class="fas fa-download"></i>
             导出
           </button>
         </div>
@@ -385,7 +384,7 @@ onMounted(() => {
                 :disabled="issuingId === row.id"
                 @click="handleIssue(row)"
               >
-                <el-icon><Promotion /></el-icon>
+                <i class="fas fa-paper-plane"></i>
               </button>
               <button
                 v-permission="'reserve:view'"
@@ -393,7 +392,7 @@ onMounted(() => {
                 title="查看详情"
                 @click="openDetail(row)"
               >
-                <el-icon><View /></el-icon>
+                <i class="fas fa-eye"></i>
               </button>
             </div>
           </template>
@@ -409,50 +408,61 @@ onMounted(() => {
     </div>
 
     <el-dialog v-model="detailDialogVisible" title="项目详情" width="680px">
-      <el-descriptions v-loading="detailLoading" :column="2" border>
-        <el-descriptions-item label="项目编码">
-          {{ detailData?.project.projectCode ?? '-' }}
-        </el-descriptions-item>
-        <el-descriptions-item label="项目名称">
-          {{ detailData?.project.projectName ?? '-' }}
-        </el-descriptions-item>
-        <el-descriptions-item label="二级分类">
-          {{ detailData?.project.projectType ?? '-' }}
-        </el-descriptions-item>
-        <el-descriptions-item label="投资金额（万元）">
-          {{ detailData ? yuanToWan(detailData.project.investmentAmount) : '-' }}
-        </el-descriptions-item>
-        <el-descriptions-item label="所属单位">
-          {{ detailData?.project.deptName ?? '-' }}
-        </el-descriptions-item>
-        <el-descriptions-item label="入库时间">
-          {{ formatDateTime(detailData?.project.createTime ?? '') }}
-        </el-descriptions-item>
-        <el-descriptions-item label="状态">
+      <div v-loading="detailLoading" class="detail-grid">
+        <div class="detail-field">
+          <label>项目编码</label>
+          <span class="detail-value">{{ detailData?.project.projectCode ?? '-' }}</span>
+        </div>
+        <div class="detail-field">
+          <label>项目名称</label>
+          <span class="detail-value">{{ detailData?.project.projectName ?? '-' }}</span>
+        </div>
+        <div class="detail-field">
+          <label>二级分类</label>
+          <span class="detail-value">{{ detailData?.project.projectType ?? '-' }}</span>
+        </div>
+        <div class="detail-field">
+          <label>投资金额（万元）</label>
+          <span class="detail-value">{{ detailData ? yuanToWan(detailData.project.investmentAmount) : '-' }}</span>
+        </div>
+        <div class="detail-field">
+          <label>所属单位</label>
+          <span class="detail-value">{{ detailData?.project.deptName ?? '-' }}</span>
+        </div>
+        <div class="detail-field">
+          <label>入库时间</label>
+          <span class="detail-value">{{ formatDateTime(detailData?.project.createTime ?? '') }}</span>
+        </div>
+        <div class="detail-field">
+          <label>状态</label>
           <StatusTag v-if="detailData" :type="statusTagType(detailData.project.status)">
             {{ detailData.project.status }}
           </StatusTag>
-          <span v-else>-</span>
-        </el-descriptions-item>
-        <el-descriptions-item label="论证状态">
+          <span v-else class="detail-value">-</span>
+        </div>
+        <div class="detail-field">
+          <label>论证状态</label>
           <StatusTag v-if="detailData?.review" :type="resultTagType(detailData.review.result)">
             {{ detailData.review.result }}
           </StatusTag>
           <span v-else class="empty-value">—</span>
-        </el-descriptions-item>
-        <el-descriptions-item label="审核状态">
+        </div>
+        <div class="detail-field">
+          <label>审核状态</label>
           <StatusTag v-if="detailData?.audit" :type="resultTagType(detailData.audit.result)">
             {{ detailData.audit.result }}
           </StatusTag>
           <span v-else class="empty-value">—</span>
-        </el-descriptions-item>
-        <el-descriptions-item label="下达时间">
-          {{ formatDateTime(detailData?.project.issueTime ?? '') }}
-        </el-descriptions-item>
-        <el-descriptions-item label="项目描述" :span="2">
-          {{ detailData?.project.description || '—' }}
-        </el-descriptions-item>
-      </el-descriptions>
+        </div>
+        <div class="detail-field">
+          <label>下达时间</label>
+          <span class="detail-value">{{ formatDateTime(detailData?.project.issueTime ?? '') }}</span>
+        </div>
+        <div class="detail-field detail-field--full">
+          <label>项目描述</label>
+          <div class="detail-box">{{ detailData?.project.description || '—' }}</div>
+        </div>
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -527,19 +537,27 @@ onMounted(() => {
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 1rem;
-  padding: 1rem;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .filter-item {
   display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  min-width: 180px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-item :deep(.el-input),
+.filter-item :deep(.el-select) {
+  width: 180px;
 }
 
 .filter-label {
+  white-space: nowrap;
   color: var(--text-secondary);
   font-size: 0.85rem;
 }

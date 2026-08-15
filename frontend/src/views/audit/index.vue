@@ -2,7 +2,6 @@
 import { nextTick, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { CircleCheck, CircleClose, Edit, View } from '@element-plus/icons-vue'
 import { yuanToWan } from '../../utils/format'
 import { projectTypeDict } from '../../api/project'
 import {
@@ -337,7 +336,7 @@ onMounted(() => {
           class="btn btn-success"
           @click="handleBatch(true)"
         >
-          <el-icon><CircleCheck /></el-icon>
+          <i class="fas fa-check"></i>
           批量通过
         </button>
         <button
@@ -345,17 +344,17 @@ onMounted(() => {
           class="btn btn-outline"
           @click="handleBatch(false)"
         >
-          <el-icon><CircleClose /></el-icon>
+          <i class="fas fa-times"></i>
           批量退回
         </button>
       </div>
     </div>
 
     <div class="stats-grid">
-      <StatCard title="待审核" :value="stats.pending" color="warning" icon="Clock" />
-      <StatCard title="已审核通过" :value="stats.passed" color="success" icon="CircleCheck" />
-      <StatCard title="已退回" :value="stats.rejected" color="danger" icon="RefreshLeft" />
-      <StatCard title="通过率" :value="formatRate(stats.passRate)" color="info" icon="TrendCharts" />
+      <StatCard title="待审核" :value="stats.pending" color="warning" icon="fa-clock" />
+      <StatCard title="已审核通过" :value="stats.passed" color="success" icon="fa-check-circle" />
+      <StatCard title="已退回" :value="stats.rejected" color="danger" icon="fa-undo" />
+      <StatCard title="通过率" :value="formatRate(stats.passRate)" color="info" icon="fa-chart-pie" />
     </div>
 
     <div class="card">
@@ -455,7 +454,7 @@ onMounted(() => {
                 title="审核"
                 @click="openAudit(row)"
               >
-                <el-icon><Edit /></el-icon>
+                <i class="fas fa-edit"></i>
               </button>
               <button
                 v-permission="'audit:view'"
@@ -463,7 +462,7 @@ onMounted(() => {
                 title="查看详情"
                 @click="openDetail(row)"
               >
-                <el-icon><View /></el-icon>
+                <i class="fas fa-eye"></i>
               </button>
             </div>
           </template>
@@ -484,32 +483,40 @@ onMounted(() => {
       width="620px"
       :close-on-click-modal="false"
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="项目编码">
-          <span class="readonly-text">{{ auditingRow?.projectCode }}</span>
-        </el-form-item>
-        <el-form-item label="项目名称">
-          <span class="readonly-text">{{ auditingRow?.projectName }}</span>
-        </el-form-item>
-        <el-form-item label="二级分类">
+      <div class="detail-grid">
+        <div class="detail-field">
+          <label>项目编码</label>
+          <span class="detail-value">{{ auditingRow?.projectCode }}</span>
+        </div>
+        <div class="detail-field">
+          <label>项目名称</label>
+          <span class="detail-value">{{ auditingRow?.projectName }}</span>
+        </div>
+        <div class="detail-field">
+          <label>二级分类</label>
           <StatusTag v-if="auditingRow" type="primary">{{ auditingRow.projectType }}</StatusTag>
-        </el-form-item>
-        <el-form-item label="投资金额">
-          <span class="readonly-text">
+        </div>
+        <div class="detail-field">
+          <label>投资金额</label>
+          <span class="detail-value">
             {{ auditingRow ? `${yuanToWan(auditingRow.investmentAmount)} 万元` : '-' }}
           </span>
-        </el-form-item>
-        <el-form-item label="论证结果">
+        </div>
+        <div class="detail-field">
+          <label>论证结果</label>
           <StatusTag v-if="auditingRow?.review" :type="reviewResultTagType(auditingRow.review.result)">
             {{ auditingRow.review.result }}
           </StatusTag>
           <span v-else class="empty-value">—</span>
-        </el-form-item>
-        <el-form-item label="论证意见">
-          <div class="opinion-box">{{ auditingRow?.review?.opinion || '—' }}</div>
-        </el-form-item>
-        <el-divider content-position="left">审核意见</el-divider>
-        <el-form-item label="审核意见" prop="opinion">
+        </div>
+        <div class="detail-field detail-field--full">
+          <label>论证意见</label>
+          <div class="detail-box">{{ auditingRow?.review?.opinion || '—' }}</div>
+        </div>
+      </div>
+      <el-divider content-position="left">审核意见</el-divider>
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top" class="form-grid">
+        <el-form-item label="审核意见" prop="opinion" class="form-item--full">
           <el-input
             v-model="form.opinion"
             type="textarea"
@@ -518,7 +525,7 @@ onMounted(() => {
             maxlength="500"
           />
         </el-form-item>
-        <el-form-item label="审核结果" prop="result">
+        <el-form-item label="审核结果" prop="result" class="form-item--full">
           <el-select v-model="form.result" placeholder="请选择" style="width: 100%">
             <el-option label="通过" value="通过" />
             <el-option label="退回" value="退回" />
@@ -532,35 +539,50 @@ onMounted(() => {
     </el-dialog>
 
     <el-dialog v-model="detailDialogVisible" title="审核详情" width="680px">
-      <el-descriptions v-loading="detailLoading" :column="2" border>
-        <el-descriptions-item label="项目编码">{{ detailData?.project.projectCode ?? '-' }}</el-descriptions-item>
-        <el-descriptions-item label="项目名称">{{ detailData?.project.projectName ?? '-' }}</el-descriptions-item>
-        <el-descriptions-item label="二级分类">{{ detailData?.project.projectType ?? '-' }}</el-descriptions-item>
-        <el-descriptions-item label="投资金额（万元）">
-          {{ detailData ? yuanToWan(detailData.project.investmentAmount) : '-' }}
-        </el-descriptions-item>
-        <el-descriptions-item label="论证结果">
+      <div v-loading="detailLoading" class="detail-grid">
+        <div class="detail-field">
+          <label>项目编码</label>
+          <span class="detail-value">{{ detailData?.project.projectCode ?? '-' }}</span>
+        </div>
+        <div class="detail-field">
+          <label>项目名称</label>
+          <span class="detail-value">{{ detailData?.project.projectName ?? '-' }}</span>
+        </div>
+        <div class="detail-field">
+          <label>二级分类</label>
+          <span class="detail-value">{{ detailData?.project.projectType ?? '-' }}</span>
+        </div>
+        <div class="detail-field">
+          <label>投资金额（万元）</label>
+          <span class="detail-value">{{ detailData ? yuanToWan(detailData.project.investmentAmount) : '-' }}</span>
+        </div>
+        <div class="detail-field">
+          <label>论证结果</label>
           <StatusTag v-if="detailData?.reviewResult" :type="reviewResultTagType(detailData.reviewResult)">
             {{ detailData.reviewResult }}
           </StatusTag>
           <span v-else class="empty-value">—</span>
-        </el-descriptions-item>
-        <el-descriptions-item label="审核状态">
+        </div>
+        <div class="detail-field">
+          <label>审核状态</label>
           <StatusTag v-if="detailData" :type="auditStatusTagType(detailData.project.status)">
             {{ auditStatusLabel(detailData.project.status) }}
           </StatusTag>
-          <span v-else>-</span>
-        </el-descriptions-item>
-        <el-descriptions-item label="论证意见" :span="2">
-          {{ detailData?.reviewOpinion || '—' }}
-        </el-descriptions-item>
-        <el-descriptions-item label="审核意见" :span="2">
-          {{ detailData?.audit?.opinion || '—' }}
-        </el-descriptions-item>
-        <el-descriptions-item label="审核时间" :span="2">
-          {{ formatDateTime(detailData?.audit?.auditTime ?? '') }}
-        </el-descriptions-item>
-      </el-descriptions>
+          <span v-else class="detail-value">-</span>
+        </div>
+        <div class="detail-field detail-field--full">
+          <label>论证意见</label>
+          <div class="detail-box">{{ detailData?.reviewOpinion || '—' }}</div>
+        </div>
+        <div class="detail-field detail-field--full">
+          <label>审核意见</label>
+          <div class="detail-box">{{ detailData?.audit?.opinion || '—' }}</div>
+        </div>
+        <div class="detail-field">
+          <label>审核时间</label>
+          <span class="detail-value">{{ formatDateTime(detailData?.audit?.auditTime ?? '') }}</span>
+        </div>
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -611,19 +633,27 @@ onMounted(() => {
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 1rem;
-  padding: 1rem;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .filter-item {
   display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  min-width: 180px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-item :deep(.el-input),
+.filter-item :deep(.el-select) {
+  width: 180px;
 }
 
 .filter-label {
+  white-space: nowrap;
   color: var(--text-secondary);
   font-size: 0.85rem;
 }
@@ -644,19 +674,6 @@ onMounted(() => {
 
 .empty-value {
   color: var(--text-muted);
-}
-
-.readonly-text {
-  color: var(--text-primary);
-}
-
-.opinion-box {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
-  min-height: 40px;
 }
 
 @media (max-width: 1100px) {
