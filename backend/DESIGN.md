@@ -72,30 +72,30 @@ MySQL (monthly_performance)
 
 ### 4.1 表结构（权威定义见 `database/schema.sql`）
 
-单表 `monthly_performance`，20 字段，与需求 §5 一致：
+单表 `monthly_performance`，20 字段，与需求 §5 一致。详细数据字典如下（DDL 权威定义见 `database/schema.sql`）：
 
-| 字段 | 类型 | 关键口径 |
-|---|---|---|
-| `id` | INT AUTO_INCREMENT | 主键；导入时保留 xlsx 原始 `id`（10001…） |
-| `user_id` | INT NOT NULL | 与 `month` 组合唯一 `uk_user_month` |
-| `realname` | VARCHAR(64) NOT NULL | 姓名 |
-| `month` | VARCHAR(7) NOT NULL | 定宽 `YYYY-MM`，**直接字符串比较** |
-| `task_finish_rate` | DECIMAL(4,1) NOT NULL | 分值项，全表无空值 |
-| `work_effect_rate` | DECIMAL(4,1) NOT NULL | 分值项，超 100 上限 120，不截断 |
-| `work_normativity` | INT NOT NULL | 分值项，整型存储 0/10/…/100 |
-| `learning_improvement` | DECIMAL(4,1) NULL | 分值项 |
-| `software_design` | DECIMAL(4,1) NULL | 分值项 |
-| `pre_sales_support` | TINYINT NULL | **等级项**（码 1~5） |
-| `bug_condition` | DECIMAL(4,1) NULL | 分值项 |
-| `system_design` | DECIMAL(4,1) NULL | 分值项 |
-| `code_review` | DECIMAL(4,1) NULL | 分值项 |
-| `test_quality` | TINYINT NULL | **等级项**（码 1~5） |
-| `dept` | INT NOT NULL | 二级部门 ID |
-| `role` | VARCHAR(32) NOT NULL | 岗位 key |
-| `role_name` | VARCHAR(64) NOT NULL | 岗位名（源导出冗余） |
-| `dept_name` | VARCHAR(64) NOT NULL | 二级部门名 |
-| `top_dept_id` | INT NOT NULL | 一级部门 ID（筛选键） |
-| `top_dept_name` | VARCHAR(64) NOT NULL | 一级部门名（仅展示） |
+| 字段 | 中文名 | 类型 | 可空 | 键/索引 | 说明 |
+|---|---|---|---|---|---|
+| `id` | 记录 ID | INT AUTO_INCREMENT | 否 | `pk`（主键） | 导入时保留 xlsx 原始 `id`（10001…） |
+| `user_id` | 用户 ID | INT | 否 | `uk_user_month`（与 `month` 组合唯一） | 人员标识 |
+| `realname` | 姓名 | VARCHAR(64) | 否 | — | 数据集中无工号字段 |
+| `month` | 月份 | VARCHAR(7) | 否 | `idx_month` | 定宽 `YYYY-MM`，**直接字符串比较** |
+| `task_finish_rate` | 任务完成率 | DECIMAL(4,1) | 否 | — | 分值项，全表无空值 |
+| `work_effect_rate` | 工作有效率 | DECIMAL(4,1) | 否 | — | 分值项，超 100 上限 120，不截断 |
+| `work_normativity` | 工作规范性 | INT | 否 | — | 分值项，整型存储 0/10/…/100，展示保留一位小数 |
+| `learning_improvement` | 学习及能力提升 | DECIMAL(4,1) | 是 | — | 分值项，仅 21 行有值且全为 100 |
+| `software_design` | 软需设计 | DECIMAL(4,1) | 是 | — | 分值项 |
+| `pre_sales_support` | 售前支撑 | TINYINT | 是 | — | **等级项**（码 1~5），映射在展示层 |
+| `bug_condition` | 缺陷情况 | DECIMAL(4,1) | 是 | — | 分值项 |
+| `system_design` | 概要设计 | DECIMAL(4,1) | 是 | — | 分值项 |
+| `code_review` | 代码评审 | DECIMAL(4,1) | 是 | — | 分值项，量纲 0~100，全表仅 3 行有值 |
+| `test_quality` | 测试产出质量 | TINYINT | 是 | — | **等级项**（码 1~5），映射在展示层 |
+| `dept` | 二级部门 ID | INT | 否 | — | 与一级部门严格一对一 |
+| `role` | 岗位 key | VARCHAR(32) | 否 | `idx_role` | 所有岗位判断按 key 进行 |
+| `role_name` | 岗位名称 | VARCHAR(64) | 否 | — | 由 key 映射生成，冗余存储自源导出 |
+| `dept_name` | 二级部门名称 | VARCHAR(64) | 否 | — | 仅展示 |
+| `top_dept_id` | 一级部门 ID | INT | 否 | `idx_top_dept_id` | 筛选键 |
+| `top_dept_name` | 一级部门名称 | VARCHAR(64) | 否 | — | 仅展示 |
 
 ### 4.2 实体类型映射（camelCase）
 
@@ -119,13 +119,13 @@ DECIMAL → `BigDecimal`，TINYINT/INT → `Integer`，VARCHAR → `String`。
 GET /api/performance/monthly
 ```
 
-Query 参数（均可缺省 / 空串表示「全部」）：
+Query 参数（均可缺省 / 空值表示「全部」，空值不拼入过滤逻辑）：
 
-| 参数 | 类型 | 说明 |
-|---|---|---|
-| `topDeptId` | int | 一级部门 ID，空 = 全部 |
-| `role` | string | 岗位 key，空 = 全部 |
-| `month` | string | 月份 `YYYY-MM`，空 = 全部 |
+| 参数 | 类型 | 必填 | 说明 | 示例 |
+|---|---|---|---|---|
+| `topDeptId` | int | 否 | 一级部门 ID，空 = 全部 | `10` |
+| `role` | string | 否 | 岗位 key，空 = 全部 | `dev` |
+| `month` | string | 否 | 月份 `YYYY-MM`，空 = 全部 | `2026-07` |
 
 ### 5.2 统一响应体
 
@@ -139,9 +139,77 @@ Query 参数（均可缺省 / 空串表示「全部」）：
 | 成功无数据 | 200 | 200 | `[]` | 空态 |
 | 失败 | 500 | 500 | `null` | 错误态 + 重试 |
 
-### 5.3 data 元素
+### 5.3 出参字段（data 元素）
 
-返回 `monthly_performance` 全部 20 字段**原样**（NULL → JSON `null`，0 → JSON `0`，等级码 → 1~5 整数，decimal → 数值不截断）。展示层只渲染 15 列，格式化/映射在前端完成。
+返回 `monthly_performance` 全部 20 字段**原样**，字段名为 camelCase（MyBatis-Plus 下划线转驼峰）：
+
+| 字段（camelCase） | 类型 | 可空 | 说明 |
+|---|---|---|---|
+| `id` | int | 否 | 记录 ID |
+| `userId` | int | 否 | 用户 ID |
+| `realname` | string | 否 | 姓名 |
+| `month` | string | 否 | 月份 `YYYY-MM` |
+| `taskFinishRate` | number | 否 | 分值项，任务完成率 |
+| `workEffectRate` | number | 否 | 分值项，工作有效率（可超 100） |
+| `workNormativity` | number | 否 | 分值项，工作规范性（整型存储） |
+| `learningImprovement` | number | 是 | 分值项，学习及能力提升 |
+| `softwareDesign` | number | 是 | 分值项，软需设计 |
+| `preSalesSupport` | number | 是 | **等级项**，等级码 1~5 |
+| `bugCondition` | number | 是 | 分值项，缺陷情况 |
+| `systemDesign` | number | 是 | 分值项，概要设计 |
+| `codeReview` | number | 是 | 分值项，代码评审 |
+| `testQuality` | number | 是 | **等级项**，等级码 1~5 |
+| `dept` | int | 否 | 二级部门 ID |
+| `role` | string | 否 | 岗位 key |
+| `roleName` | string | 否 | 岗位名称 |
+| `deptName` | string | 否 | 二级部门名称 |
+| `topDeptId` | int | 否 | 一级部门 ID |
+| `topDeptName` | string | 否 | 一级部门名称 |
+
+> **关键**：分值项/等级项 `NULL` 序列化为 JSON `null`，`0` 序列化为 JSON `0`，二者语义相反，后端不做归并；等级码以整数原样返回，映射在展示层完成；decimal 数值不截断。展示层只渲染 15 列，格式化/映射在前端完成。
+
+### 5.4 示例
+
+请求（筛选 2026-07 + 一级部门 10）：
+
+```http
+GET /api/performance/monthly?month=2026-07&topDeptId=10
+```
+
+响应（节选一条，展示 NULL 与 0 的区分、等级码原样返回）：
+
+```json
+{
+  "code": 200,
+  "msg": "success",
+  "data": [
+    {
+      "id": 10430,
+      "userId": 1062,
+      "realname": "彭桂",
+      "month": "2026-07",
+      "taskFinishRate": 63.4,
+      "workEffectRate": 100.0,
+      "workNormativity": 0,
+      "learningImprovement": null,
+      "softwareDesign": null,
+      "preSalesSupport": 5,
+      "bugCondition": null,
+      "systemDesign": null,
+      "codeReview": null,
+      "testQuality": 5,
+      "dept": 101,
+      "role": "po",
+      "roleName": "产品经理",
+      "deptName": "平台研发部",
+      "topDeptId": 10,
+      "topDeptName": "技术中心"
+    }
+  ]
+}
+```
+
+> `workNormativity: 0` 表示「有该项工作但得 0 分」；`learningImprovement: null` 表示「无该项工作」；`preSalesSupport: 5` / `testQuality: 5` 为等级码原样返回（不做文本映射）。
 
 ---
 

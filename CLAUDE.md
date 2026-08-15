@@ -5,8 +5,6 @@
 ## 上下文指针
 
 - `docs/需求文档.md` —— 需求与验收口径全文。
-- `docs/问题清单.md` —— 待确认/歧义项，实现前先对齐。
-- `database/schema.sql` —— 表结构权威定义，改动需与此同步。
 
 ## 技术栈
 
@@ -14,16 +12,17 @@
 - 前端：Vue 3 + TypeScript（strict）+ Vite + Element Plus。
 - 具体版本与配置见 `backend/pom.xml`、`backend/src/main/resources/application.yml`、`frontend/package.json`。
 
-## 项目结构
+## 常用命令
 
-```
-backend/           Spring Boot 服务，分层 controller / service / mapper / domain / dto / common
-frontend/          Vue 3 + Vite，src 下组件化组织
-database/          建表 DDL（schema.sql）+ 种子数据（seed.sql）
-scripts/           import_xlsx.py（xlsx → MySQL 导入）
-docs/              需求 / 问题清单 / 规格 / 计划 / 设计 / 原型
-docker-compose.yml MySQL / Redis / MinIO（项目根目录）
-```
+| 用途 | 命令 |
+|---|---|
+| 启动后端 | `cd backend && mvn spring-boot:run` |
+| 后端测试 | `cd backend && mvn test` |
+| 启动前端 | `cd frontend && npm run dev`（默认端口 5175） |
+| 前端类型检查 | `cd frontend && npm run typecheck` |
+| 前端测试 | `cd frontend && npm test` |
+| 生成种子数据 | `python3 scripts/import_xlsx.py`（生成 `database/seed.sql`） |
+| 启动中间件 | `docker compose up -d`（MySQL / Redis / MinIO） |
 
 ## 架构与职责边界
 
