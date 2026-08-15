@@ -181,3 +181,63 @@ CREATE TABLE project_audit (
   CONSTRAINT pk_project_audit PRIMARY KEY (id),
   KEY idx_project_audit_project (project_id)
 );
+
+-- 自动化测试-场景
+CREATE TABLE at_scenario (
+  id BIGINT AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  description VARCHAR(500),
+  base_url VARCHAR(255),
+  variables JSON,
+  create_by BIGINT,
+  create_time DATETIME,
+  update_by BIGINT,
+  update_time DATETIME,
+  CONSTRAINT pk_at_scenario PRIMARY KEY (id)
+);
+
+-- 自动化测试-步骤
+CREATE TABLE at_step (
+  id BIGINT AUTO_INCREMENT,
+  scenario_id BIGINT NOT NULL,
+  step_order INT NOT NULL,
+  name VARCHAR(100),
+  params JSON NOT NULL,
+  create_time DATETIME,
+  update_time DATETIME,
+  CONSTRAINT pk_at_step PRIMARY KEY (id),
+  KEY idx_at_step_scenario (scenario_id)
+);
+
+-- 自动化测试-执行记录
+CREATE TABLE at_run (
+  id BIGINT AUTO_INCREMENT,
+  scenario_id BIGINT,
+  status TINYINT,
+  fail_step_id BIGINT,
+  error_msg VARCHAR(1000),
+  start_time DATETIME,
+  end_time DATETIME,
+  trigger_by BIGINT,
+  create_time DATETIME,
+  CONSTRAINT pk_at_run PRIMARY KEY (id),
+  KEY idx_at_run_scenario (scenario_id)
+);
+
+-- 自动化测试-步骤结果
+CREATE TABLE at_step_result (
+  id BIGINT AUTO_INCREMENT,
+  run_id BIGINT NOT NULL,
+  step_id BIGINT,
+  step_order INT,
+  name VARCHAR(100),
+  status TINYINT,
+  request_snapshot JSON,
+  response_snapshot JSON,
+  assert_detail TEXT,
+  error_msg VARCHAR(1000),
+  start_time DATETIME,
+  end_time DATETIME,
+  CONSTRAINT pk_at_step_result PRIMARY KEY (id),
+  KEY idx_at_step_result_run (run_id)
+);

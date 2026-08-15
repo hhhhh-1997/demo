@@ -23,7 +23,8 @@ INSERT INTO sys_menu (id, menu_name, parent_id, path, component, perms, menu_typ
  (5,'系统管理',0,'/system','','','M',5),
  (6,'用户管理',5,'user','system/user/index','system:user','C',1),
  (7,'角色管理',5,'role','system/role/index','system:role','C',2),
- (8,'菜单管理',5,'menu','system/menu/index','system:menu','C',3);
+ (8,'菜单管理',5,'menu','system/menu/index','system:menu','C',3),
+ (9,'自动化测试',0,'/autotest/scenario','autotest/scenario/index','','C',6);
 -- 按钮（F）
 INSERT INTO sys_menu (id, menu_name, parent_id, perms, menu_type, sort) VALUES
  (101,'项目新增',1,'project:add','F',1),(102,'项目编辑',1,'project:edit','F',2),
@@ -33,7 +34,12 @@ INSERT INTO sys_menu (id, menu_name, parent_id, perms, menu_type, sort) VALUES
  (301,'审核执行',3,'audit:execute','F',1),(302,'批量审核',3,'audit:batch','F',2),
  (303,'审核查看',3,'audit:view','F',3),
  (401,'项目下达',4,'reserve:issue','F',1),(402,'储备库查看',4,'reserve:view','F',2),
- (403,'储备库导出',4,'reserve:export','F',3);
+ (403,'储备库导出',4,'reserve:export','F',3),
+ (901,'场景新增',9,'autotest:scenario:add','F',1),
+ (902,'场景编辑',9,'autotest:scenario:edit','F',2),
+ (903,'场景删除',9,'autotest:scenario:delete','F',3),
+ (904,'场景运行',9,'autotest:scenario:run','F',4),
+ (905,'场景查看',9,'autotest:scenario:list','F',5);
 
 -- 角色-菜单：admin 拥有所有菜单
 INSERT INTO sys_role_menu (role_id, menu_id)
