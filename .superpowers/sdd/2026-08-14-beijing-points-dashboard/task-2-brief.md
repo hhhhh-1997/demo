@@ -1,0 +1,261 @@
+### Task 2: 类型定义 + 统计聚合函数（TDD）
+
+**Files:**
+- Create: `frontend/src/types.ts`
+- Create: `frontend/src/utils/stats.ts`
+- Test: `frontend/src/utils/stats.test.ts`
+
+**Interfaces:**
+- Produces（后续所有任务依赖）:
+  - `types.ts`: `interface Record { id: string; name: string; birth: string; unit: string; score: number; age: number }`、`interface LlmConfig { id: string; name: string; baseUrl: string; apiKey: string; model: string; isDefault: boolean }`、`interface ChatMessage { role: 'system' | 'user' | 'assistant' | 'tool'; content: string; tool_calls?: ToolCall[]; tool_call_id?: string; name?: string }`、`interface ToolCall { id: string; type: 'function'; function: { name: string; arguments: string } }`
+  - `stats.ts` 导出下面全部函数（签名见实现）。
+
+- [ ] **Step 1: 写失败测试**
+
+创建 `frontend/src/utils/stats.test.ts`：
+
+```ts
+import { describe, it, expect } from 'vitest'
+import {
+  summarize, ageDistribution, ageMode, topUnits,
+  unitSizeDistribution, totalUnits, scoreDistribution, median,
+} from './stats'
+import type { Record } from '../types'
+
+const rec = (id: string, birth: string, unit: string, score: number): Record =>
+  ({ id, name: 'N' + id, birth, unit, score, age: 2026 - Number(birth.slice(0, 4)) })
+
+const records: Record[] = [
+  rec('1', '1980-01', 'A公司', 130),
+  rec('2', '1982-05', 'A公司', 120),
+  rec('3', '1982-08', 'B公司', 140),
+  rec('4', '1990-11', 'C公司', 125),
+  rec('5', '1982-03', 'A公司', 121),
+]
+
+describe('median', () => {
+  it('偶数个取平均', () => { expect(median([1, 2, 3, 4])).toBe(2.5) })
+  it('奇数个取中间', () => { expect(median([5, 1, 3])).toBe(3) })
+})
+
+describe('summarize', () => {
+  it('计算总分与积分/年龄统计', () => {
+    const s = summarize(records)
+    expect(s.total).toBe(5)
+    expect(s.scoreMax).toBe(140)
+    expect(s.scoreMin).toBe(120)
+    expect(s.ageMin).toBe(36)
+    expect(s.ageMax).toBe(46)
+  })
+})
+
+describe('ageDistribution', () => {
+  it('按年龄升序统计', () => {
+    const d = ageDistribution(records)
+    expect(d[0]).toEqual({ age: 36, count: 1 })
+    expect(d.find(x => x.age === 44)!.count).toBe(3)
+  })
+})
+
+describe('ageMode', () => {
+  it('返回人数最多的年龄', () => {
+    expect(ageMode(records)).toEqual({ value: 44, count: 3 })
+  })
+})
+
+describe('topUnits', () => {
+  it('按人数降序', () => {
+    expect(topUnits(records, 2)).toEqual([
+      { unit: 'A公司', count: 3 },
+      { unit: 'B公司', count: 1 },
+    ])
+  })
+})
+
+describe('totalUnits', () => {
+  it('统计去重单位数', () => { expect(totalUnits(records)).toBe(3) })
+})
+
+describe('unitSizeDistribution', () => {
+  it('按规模分桶', () => {
+    const d = unitSizeDistribution(records)
+    expect(d[0]).toEqual({ label: '1 人', units: 2, people: 2 })
+    expect(d[1]).toEqual({ label: '2–5 人', units: 1, people: 3 })
+  })
+})
+
+describe('scoreDistribution', () => {
+  it('每 2 分一个桶', () => {
+    const d = scoreDistribution(records, 2)
+    expect(d[0]).toMatchObject({ lo: 120, hi: 122, count: 2 })
+  })
+})
+```
+
+- [ ] **Step 2: 运行测试确认失败**
+
+Run: `cd frontend && npx vitest run src/utils/stats.test.ts`
+Expected: FAIL，`Cannot find module './stats'`。
+
+- [ ] **Step 3: 实现 types.ts**
+
+创建 `frontend/src/types.ts`：
+
+```ts
+export interface Record {
+  id: string
+  name: string
+  birth: string
+  unit: string
+  score: number
+  age: number
+}
+
+export interface LlmConfig {
+  id: string
+  name: string
+  baseUrl: string
+  apiKey: string
+  model: string
+  isDefault: boolean
+}
+
+export interface ToolCall {
+  id: string
+  type: 'function'
+  function: { name: string; arguments: string }
+}
+
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant' | 'tool'
+  content: string
+  tool_calls?: ToolCall[]
+  tool_call_id?: string
+  name?: string
+}
+```
+
+- [ ] **Step 4: 实现 stats.ts**
+
+创建 `frontend/src/utils/stats.ts`：
+
+```ts
+import type { Record } from '../types'
+
+export interface KpiSummary {
+  total: number
+  scoreMin: number
+  scoreMax: number
+  scoreAvg: number
+  scoreMedian: number
+  ageMin: number
+  ageMax: number
+  ageAvg: number
+  ageMedian: number
+}
+
+export interface AgeBucket { age: number; count: number }
+export interface UnitBucket { unit: string; count: number }
+export interface UnitSizeBucket { label: string; units: number; people: number }
+export interface ScoreBucket { label: string; lo: number; hi: number; count: number }
+
+export function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+}
+
+export function summarize(records: Record[]): KpiSummary {
+  const scores = records.map(r => r.score)
+  const ages = records.map(r => r.age)
+  const total = records.length
+  const avg = (xs: number[]) => (total ? xs.reduce((a, b) => a + b, 0) / total : 0)
+  return {
+    total,
+    scoreMin: Math.min(...scores),
+    scoreMax: Math.max(...scores),
+    scoreAvg: avg(scores),
+    scoreMedian: median(scores),
+    ageMin: Math.min(...ages),
+    ageMax: Math.max(...ages),
+    ageAvg: avg(ages),
+    ageMedian: median(ages),
+  }
+}
+
+export function ageDistribution(records: Record[]): AgeBucket[] {
+  const map = new Map<number, number>()
+  for (const r of records) map.set(r.age, (map.get(r.age) ?? 0) + 1)
+  return [...map.entries()].map(([age, count]) => ({ age, count })).sort((a, b) => a.age - b.age)
+}
+
+export function ageMode(records: Record[]): { value: number; count: number } {
+  let best = { value: 0, count: 0 }
+  for (const b of ageDistribution(records)) {
+    if (b.count > best.count) best = { value: b.age, count: b.count }
+  }
+  return best
+}
+
+export function topUnits(records: Record[], n: number): UnitBucket[] {
+  const map = new Map<string, number>()
+  for (const r of records) map.set(r.unit, (map.get(r.unit) ?? 0) + 1)
+  return [...map.entries()]
+    .map(([unit, count]) => ({ unit, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, n)
+}
+
+export function totalUnits(records: Record[]): number {
+  return new Set(records.map(r => r.unit)).size
+}
+
+export function unitSizeDistribution(records: Record[]): UnitSizeBucket[] {
+  const map = new Map<string, number>()
+  for (const r of records) map.set(r.unit, (map.get(r.unit) ?? 0) + 1)
+  const buckets: UnitSizeBucket[] = [
+    { label: '1 人', units: 0, people: 0 },
+    { label: '2–5 人', units: 0, people: 0 },
+    { label: '6–10 人', units: 0, people: 0 },
+    { label: '11–20 人', units: 0, people: 0 },
+    { label: '20+ 人', units: 0, people: 0 },
+  ]
+  const idx = (c: number) => (c <= 1 ? 0 : c <= 5 ? 1 : c <= 10 ? 2 : c <= 20 ? 3 : 4)
+  for (const count of map.values()) {
+    buckets[idx(count)].units += 1
+    buckets[idx(count)].people += count
+  }
+  return buckets
+}
+
+export function scoreDistribution(records: Record[], binSize = 2): ScoreBucket[] {
+  if (!records.length) return []
+  const lo0 = Math.floor(Math.min(...records.map(r => r.score)) / binSize) * binSize
+  const hi0 = Math.ceil(Math.max(...records.map(r => r.score)) / binSize) * binSize
+  const buckets: ScoreBucket[] = []
+  for (let lo = lo0; lo < hi0; lo += binSize) {
+    const hi = lo + binSize
+    buckets.push({
+      label: `${lo}–${hi}`,
+      lo, hi,
+      count: records.filter(r => r.score >= lo && r.score < hi || (hi === hi0 && r.score === hi)).length,
+    })
+  }
+  return buckets
+}
+```
+
+- [ ] **Step 5: 运行测试确认通过**
+
+Run: `cd frontend && npx vitest run src/utils/stats.test.ts`
+Expected: PASS（8 个测试全绿）。若 `Math.min(...[])` 对空数组返回 `Infinity` 的边界未覆盖，本任务不要求空数组处理（空数据由上层 UI 守卫）。
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add frontend/src/types.ts frontend/src/utils/stats.ts frontend/src/utils/stats.test.ts
+git commit -m "feat: 数据模型与统计聚合函数"
+```
+
+---
+

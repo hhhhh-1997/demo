@@ -1,0 +1,101 @@
+# Review package: 99a6664..e39bbb3
+
+## Commits
+e39bbb3 fix: scoreDistribution 对同分值输入返回空数组
+d0961f2 docs: 修复 scoreDistribution 边界 bug（lo0===hi0 空数组）
+
+## Files changed
+ docs/superpowers/plans/2026-08-14-beijing-points-dashboard.md | 5 ++++-
+ frontend/src/utils/stats.test.ts                              | 6 ++++++
+ frontend/src/utils/stats.ts                                   | 5 ++++-
+ 3 files changed, 14 insertions(+), 2 deletions(-)
+
+## Diff
+diff --git a/docs/superpowers/plans/2026-08-14-beijing-points-dashboard.md b/docs/superpowers/plans/2026-08-14-beijing-points-dashboard.md
+index 2643c2d..bd18015 100644
+--- a/docs/superpowers/plans/2026-08-14-beijing-points-dashboard.md
++++ b/docs/superpowers/plans/2026-08-14-beijing-points-dashboard.md
+@@ -372,27 +372,30 @@ export function unitSizeDistribution(records: Record[]): UnitSizeBucket[] {
+     buckets[idx(count)].units += 1
+     buckets[idx(count)].people += count
+   }
+   return buckets
+ }
+ 
+ export function scoreDistribution(records: Record[], binSize = 2): ScoreBucket[] {
+   if (!records.length) return []
+   const lo0 = Math.floor(Math.min(...records.map(r => r.score)) / binSize) * binSize
+   const hi0 = Math.ceil(Math.max(...records.map(r => r.score)) / binSize) * binSize
++  if (lo0 === hi0) {
++    return [{ label: `${lo0}–${lo0 + binSize}`, lo: lo0, hi: lo0 + binSize, count: records.length }]
++  }
+   const buckets: ScoreBucket[] = []
+   for (let lo = lo0; lo < hi0; lo += binSize) {
+     const hi = lo + binSize
+     buckets.push({
+       label: `${lo}–${hi}`,
+       lo, hi,
+-      count: records.filter(r => r.score >= lo && r.score < hi || (hi === hi0 && r.score === hi)).length,
++      count: records.filter(r => (r.score >= lo && r.score < hi) || (hi === hi0 && r.score === hi)).length,
+     })
+   }
+   return buckets
+ }
+ ```
+ 
+ - [ ] **Step 5: 运行测试确认通过**
+ 
+ Run: `cd frontend && npx vitest run src/utils/stats.test.ts`
+ Expected: PASS（8 个测试全绿）。若 `Math.min(...[])` 对空数组返回 `Infinity` 的边界未覆盖，本任务不要求空数组处理（空数据由上层 UI 守卫）。
+diff --git a/frontend/src/utils/stats.test.ts b/frontend/src/utils/stats.test.ts
+index be1ccc3..8ce4fe8 100644
+--- a/frontend/src/utils/stats.test.ts
++++ b/frontend/src/utils/stats.test.ts
+@@ -65,11 +65,17 @@ describe('unitSizeDistribution', () => {
+     expect(d[0]).toEqual({ label: '1 人', units: 2, people: 2 })
+     expect(d[1]).toEqual({ label: '2–5 人', units: 1, people: 3 })
+   })
+ })
+ 
+ describe('scoreDistribution', () => {
+   it('每 2 分一个桶', () => {
+     const d = scoreDistribution(records, 2)
+     expect(d[0]).toMatchObject({ lo: 120, hi: 122, count: 2 })
+   })
++  it('所有分数相同且为分段整数倍时不返回空', () => {
++    const same = [rec('1', '1980-01', 'A', 120), rec('2', '1981-01', 'A', 120)]
++    const d = scoreDistribution(same, 2)
++    expect(d).toHaveLength(1)
++    expect(d[0].count).toBe(2)
++  })
+ })
+diff --git a/frontend/src/utils/stats.ts b/frontend/src/utils/stats.ts
+index db5486b..03cbc89 100644
+--- a/frontend/src/utils/stats.ts
++++ b/frontend/src/utils/stats.ts
+@@ -83,21 +83,24 @@ export function unitSizeDistribution(records: Record[]): UnitSizeBucket[] {
+     buckets[idx(count)].units += 1
+     buckets[idx(count)].people += count
+   }
+   return buckets
+ }
+ 
+ export function scoreDistribution(records: Record[], binSize = 2): ScoreBucket[] {
+   if (!records.length) return []
+   const lo0 = Math.floor(Math.min(...records.map(r => r.score)) / binSize) * binSize
+   const hi0 = Math.ceil(Math.max(...records.map(r => r.score)) / binSize) * binSize
++  if (lo0 === hi0) {
++    return [{ label: `${lo0}–${lo0 + binSize}`, lo: lo0, hi: lo0 + binSize, count: records.length }]
++  }
+   const buckets: ScoreBucket[] = []
+   for (let lo = lo0; lo < hi0; lo += binSize) {
+     const hi = lo + binSize
+     buckets.push({
+       label: `${lo}–${hi}`,
+       lo, hi,
+-      count: records.filter(r => r.score >= lo && r.score < hi || (hi === hi0 && r.score === hi)).length,
++      count: records.filter(r => (r.score >= lo && r.score < hi) || (hi === hi0 && r.score === hi)).length,
+     })
+   }
+   return buckets
+ }

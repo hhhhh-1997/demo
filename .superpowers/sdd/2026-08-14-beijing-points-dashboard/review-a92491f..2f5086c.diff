@@ -1,0 +1,85 @@
+# Review package: a92491fe527a0aadbfd7781090d26e0c2b37ba22..HEAD
+
+## Commits
+2f5086c feat: AI 对话历史（10 轮裁剪 + localStorage）
+
+## Files changed
+ frontend/src/ai/history.test.ts | 33 +++++++++++++++++++++++++++++++++
+ frontend/src/ai/history.ts      | 29 +++++++++++++++++++++++++++++
+ 2 files changed, 62 insertions(+)
+
+## Diff
+diff --git a/frontend/src/ai/history.test.ts b/frontend/src/ai/history.test.ts
+new file mode 100644
+index 0000000..0e7fbe9
+--- /dev/null
++++ b/frontend/src/ai/history.test.ts
+@@ -0,0 +1,33 @@
++import { describe, it, expect, beforeEach } from 'vitest'
++import { trimHistory, loadHistory, saveHistory, clearHistory, MAX_TURNS } from './history'
++import type { ChatMessage } from '../types'
++
++const sys: ChatMessage = { role: 'system', content: 'S' }
++const user = (i: number): ChatMessage => ({ role: 'user', content: `u${i}` })
++const ai = (i: number): ChatMessage => ({ role: 'assistant', content: `a${i}` })
++
++describe('trimHistory', () => {
++  it('轮次不超过上限时原样返回', () => {
++    const msgs = [sys, user(1), ai(1), user(2), ai(2)]
++    expect(trimHistory(msgs)).toEqual(msgs)
++  })
++  it('超过上限保留 system + 最近 10 轮', () => {
++    const msgs: ChatMessage[] = [sys]
++    for (let i = 1; i <= 12; i++) msgs.push(user(i), ai(i))
++    const out = trimHistory(msgs)
++    expect(out[0]).toEqual(sys)
++    expect(out.filter(m => m.role === 'user')).toHaveLength(MAX_TURNS)
++    expect(out[1]).toEqual(user(3))
++  })
++})
++
++describe('persistence', () => {
++  beforeEach(() => localStorage.clear())
++  it('保存与读取', () => {
++    const msgs = [user(1), ai(1)]
++    saveHistory(msgs)
++    expect(loadHistory()).toEqual(msgs)
++    clearHistory()
++    expect(loadHistory()).toEqual([])
++  })
++})
+diff --git a/frontend/src/ai/history.ts b/frontend/src/ai/history.ts
+new file mode 100644
+index 0000000..e94f9e7
+--- /dev/null
++++ b/frontend/src/ai/history.ts
+@@ -0,0 +1,29 @@
++import type { ChatMessage } from '../types'
++
++const STORAGE_KEY = 'points-settlement:chatHistory'
++export const MAX_TURNS = 10
++
++export function trimHistory(messages: ChatMessage[]): ChatMessage[] {
++  const userIdx = messages.map((m, i) => (m.role === 'user' ? i : -1)).filter(i => i >= 0)
++  if (userIdx.length <= MAX_TURNS) return messages
++  const start = userIdx[userIdx.length - MAX_TURNS]
++  const head = messages[0]?.role === 'system' ? [messages[0]] : []
++  return [...head, ...messages.slice(start)]
++}
++
++export function loadHistory(): ChatMessage[] {
++  try {
++    const raw = localStorage.getItem(STORAGE_KEY)
++    return raw ? JSON.parse(raw) as ChatMessage[] : []
++  } catch {
++    return []
++  }
++}
++
++export function saveHistory(messages: ChatMessage[]): void {
++  localStorage.setItem(STORAGE_KEY, JSON.stringify(trimHistory(messages)))
++}
++
++export function clearHistory(): void {
++  localStorage.removeItem(STORAGE_KEY)
++}

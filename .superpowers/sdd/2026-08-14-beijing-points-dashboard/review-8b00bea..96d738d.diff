@@ -1,0 +1,116 @@
+# Review package: 8b00bea..96d738d
+
+## Commits
+96d738d fix: 修复总览导入死按钮、区间筛选分页与空串强转
+
+## Files changed
+ frontend/src/components/Overview.vue | 22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
+
+## Diff
+diff --git a/frontend/src/components/Overview.vue b/frontend/src/components/Overview.vue
+index 8358268..7b4b1c0 100644
+--- a/frontend/src/components/Overview.vue
++++ b/frontend/src/components/Overview.vue
+@@ -18,28 +18,34 @@ const kpi = computed(() => {
+   }
+ })
+ 
+ // 筛选
+ const keyword = ref('')
+ const ageMin = ref<number | null>(null)
+ const ageMax = ref<number | null>(null)
+ const scoreMin = ref<number | null>(null)
+ const scoreMax = ref<number | null>(null)
+ 
++const toNum = (v: number | null | string): number | null => (v === '' || v == null ? null : Number(v))
++
+ const filtered = computed(() => {
+   const kw = keyword.value.trim().toLowerCase()
++  const aMin = toNum(ageMin.value)
++  const aMax = toNum(ageMax.value)
++  const sMin = toNum(scoreMin.value)
++  const sMax = toNum(scoreMax.value)
+   return records.value.filter(r => {
+     if (kw && !(r.id.toLowerCase().includes(kw) || r.name.toLowerCase().includes(kw) || r.unit.toLowerCase().includes(kw))) return false
+-    if (ageMin.value != null && r.age < ageMin.value) return false
+-    if (ageMax.value != null && r.age > ageMax.value) return false
+-    if (scoreMin.value != null && r.score < scoreMin.value) return false
+-    if (scoreMax.value != null && r.score > scoreMax.value) return false
++    if (aMin != null && r.age < aMin) return false
++    if (aMax != null && r.age > aMax) return false
++    if (sMin != null && r.score < sMin) return false
++    if (sMax != null && r.score > sMax) return false
+     return true
+   })
+ })
+ 
+ // 分页
+ const pageSize = 10
+ const page = ref(0)
+ const paged = computed(() => filtered.value.slice(page.value * pageSize, (page.value + 1) * pageSize))
+ function resetPage() { page.value = 0 }
+ 
+@@ -98,36 +104,35 @@ function saveForm() {
+     <div class="card">
+       <div class="card-head">
+         <h2 class="card-title">筛选与搜索</h2>
+         <span class="card-hint">支持姓名 / 公示编号 / 单位名称模糊匹配</span>
+       </div>
+       <div class="filter-bar">
+         <div class="f-group"><label>关键词搜索</label>
+           <div class="f-search"><input v-model="keyword" placeholder="姓名 / 编号 / 单位" @input="resetPage" /></div>
+         </div>
+         <div class="f-group"><label>年龄区间</label>
+-          <div class="f-range"><input v-model.number="ageMin" type="number" placeholder="最小" /><span>—</span><input v-model.number="ageMax" type="number" placeholder="最大" /></div>
++          <div class="f-range"><input v-model.number="ageMin" type="number" placeholder="最小" @input="resetPage" /><span>—</span><input v-model.number="ageMax" type="number" placeholder="最大" @input="resetPage" /></div>
+         </div>
+         <div class="f-group"><label>积分区间</label>
+-          <div class="f-range"><input v-model.number="scoreMin" type="number" step="0.01" placeholder="最小" /><span>—</span><input v-model.number="scoreMax" type="number" step="0.01" placeholder="最大" /></div>
++          <div class="f-range"><input v-model.number="scoreMin" type="number" step="0.01" placeholder="最小" @input="resetPage" /><span>—</span><input v-model.number="scoreMax" type="number" step="0.01" placeholder="最大" @input="resetPage" /></div>
+         </div>
+         <div class="f-group"><label>&nbsp;</label>
+           <div style="display:flex;gap:10px;">
+             <button class="btn primary" @click="resetPage">查询</button>
+             <button class="btn ghost" @click="keyword='';ageMin=null;ageMax=null;scoreMin=null;scoreMax=null;resetPage()">重置</button>
+             <button class="btn secondary" @click="fileInput?.click()">导入 Excel</button>
+             <button class="btn secondary" @click="openNew">新增记录</button>
+             <button class="btn ghost" @click="clearAll(); toast('已清空')">清空数据</button>
+           </div>
+         </div>
+       </div>
+-      <input ref="fileInput" type="file" accept=".xlsx,.xls" style="display:none" @change="onImport" />
+     </div>
+ 
+     <div class="card">
+       <div class="card-head"><h2 class="card-title">公示名单明细</h2><span class="card-hint">共 {{ filtered.length }} 条</span></div>
+       <div class="table-wrap">
+         <table>
+           <thead><tr><th>公示编号</th><th>姓名</th><th>出生年月</th><th class="r">年龄</th><th>单位名称</th><th class="r">积分分值</th><th></th></tr></thead>
+           <tbody>
+             <tr v-for="r in paged" :key="r.id" @click="detail = r">
+               <td><span class="id">{{ r.id }}</span></td><td>{{ r.name }}</td><td class="num">{{ r.birth }}</td>
+@@ -145,20 +150,23 @@ function saveForm() {
+         <span class="info">显示第 {{ page * pageSize + 1 }}–{{ Math.min((page + 1) * pageSize, filtered.length) }} 条，共 {{ filtered.length }} 条</span>
+         <div class="pg">
+           <button :disabled="page <= 0" @click="page--">‹</button>
+           <span class="mono">{{ page + 1 }} / {{ Math.max(1, Math.ceil(filtered.length / pageSize)) }}</span>
+           <button :disabled="page >= Math.ceil(filtered.length / pageSize) - 1" @click="page++">›</button>
+         </div>
+       </div>
+     </div>
+   </div>
+ 
++  <!-- 隐藏的文件输入：始终渲染（空态与非空态均可触发导入） -->
++  <input ref="fileInput" type="file" accept=".xlsx,.xls" style="display:none" @change="onImport" />
++
+   <!-- 详情弹窗 -->
+   <div class="modal-mask" :class="{ show: detail }">
+     <div class="modal">
+       <div class="modal-h"><h3>人员详情</h3><button class="x" @click="detail = null">×</button></div>
+       <div class="modal-b"><dl class="dl" v-if="detail">
+         <dt>公示编号</dt><dd>{{ detail.id }}</dd><dt>姓名</dt><dd>{{ detail.name }}</dd>
+         <dt>出生年月</dt><dd>{{ detail.birth }}</dd><dt>年龄</dt><dd>{{ detail.age }} 岁</dd>
+         <dt>单位名称</dt><dd>{{ detail.unit }}</dd><dt>积分分值</dt><dd>{{ detail.score.toFixed(2) }} 分</dd>
+       </dl></div>
+       <div class="modal-f"><button class="btn primary" @click="detail = null">关闭</button></div>
