@@ -1,11 +1,5 @@
 # CLAUDE.md
 
-绩效月报查询模块。前后端分离：前端负责检索交互与数据展示，后端负责检索并**原样返回原始数据**。
-
-## 上下文指针
-
-- `docs/需求文档.md` —— 需求与验收口径全文。
-
 ## 技术栈
 
 - 后端：Spring Boot 3 / Java 21 / MyBatis-Plus / MySQL / Redis / MinIO。
