@@ -40,7 +40,7 @@ async function handleLogin(): Promise<void> {
   try {
     await userStore.login(form.username, form.password)
     ElMessage.success('登录成功')
-    await router.push('/')
+    await router.push('/project')
   } finally {
     loading.value = false
   }

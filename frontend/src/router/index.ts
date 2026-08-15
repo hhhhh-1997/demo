@@ -112,7 +112,7 @@ router.beforeEach(async (to) => {
     }
   }
   if (to.path === '/login' && hasToken) {
-    return { path: '/' }
+    return { path: '/project' }
   }
   return true
 })
