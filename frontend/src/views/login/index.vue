@@ -40,7 +40,7 @@ async function handleLogin(): Promise<void> {
   try {
     await userStore.login(form.username, form.password)
     ElMessage.success('登录成功')
-    await router.push('/project')
+    await router.push('/')
   } finally {
     loading.value = false
   }
@@ -49,12 +49,18 @@ async function handleLogin(): Promise<void> {
 
 <template>
   <div class="login-page">
+    <div class="login-bg" aria-hidden="true">
+      <span class="blob blob-1"></span>
+      <span class="blob blob-2"></span>
+      <span class="blob blob-3"></span>
+    </div>
     <div class="login-card">
       <div class="login-logo">
         <img class="login-logo-img" :src="logoWhite" alt="logo" />
       </div>
       <h1 class="login-title">储备项目管理系统</h1>
       <p class="login-subtitle">综合计划储备项目管理平台</p>
+      <p class="login-tagline">项目全生命周期 · 论证审核下达 · 接口链路自动化</p>
       <el-form
         ref="formRef"
         :model="form"
@@ -96,10 +102,12 @@ async function handleLogin(): Promise<void> {
 
 <style scoped>
 .login-page {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+  overflow: hidden;
   background: radial-gradient(
     ellipse at center,
     var(--bg-secondary) 0%,
@@ -107,7 +115,47 @@ async function handleLogin(): Promise<void> {
   );
 }
 
+.login-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.3;
+}
+
+.blob-1 {
+  width: 420px;
+  height: 420px;
+  top: -120px;
+  left: -80px;
+  background: #409eff;
+}
+
+.blob-2 {
+  width: 360px;
+  height: 360px;
+  bottom: -100px;
+  right: -60px;
+  background: #67c23a;
+}
+
+.blob-3 {
+  width: 300px;
+  height: 300px;
+  bottom: 18%;
+  left: 10%;
+  background: #e6a23c;
+}
+
 .login-card {
+  position: relative;
+  z-index: 1;
   width: 380px;
   padding: 2.5rem 2rem;
   background-color: var(--bg-card);
@@ -135,9 +183,16 @@ async function handleLogin(): Promise<void> {
 }
 
 .login-subtitle {
-  margin: 0 0 2rem;
+  margin: 0 0 0.5rem;
   text-align: center;
   color: var(--text-secondary);
+}
+
+.login-tagline {
+  margin: 0 0 2rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
 
 .login-button {
