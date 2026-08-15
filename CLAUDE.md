@@ -18,7 +18,7 @@
 |---|---|
 | 启动后端 | `cd backend && mvn spring-boot:run` |
 | 后端测试 | `cd backend && mvn test` |
-| 启动前端 | `cd frontend && npm run dev`（默认端口 5175） |
+| 启动前端 | `cd frontend && npm run dev`（默认端口 5174） |
 | 前端类型检查 | `cd frontend && npm run typecheck` |
 | 前端测试 | `cd frontend && npm test` |
 | 生成种子数据 | `python3 scripts/import_xlsx.py`（生成 `database/seed.sql`） |

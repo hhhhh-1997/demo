@@ -13,10 +13,10 @@ import PerformanceQuery from './components/PerformanceQuery.vue'
   </nav>
 
   <main class="page-main">
-    <el-breadcrumb separator="/">
-      <el-breadcrumb-item>首页</el-breadcrumb-item>
-      <el-breadcrumb-item>绩效管理</el-breadcrumb-item>
-      <el-breadcrumb-item>绩效月报查询</el-breadcrumb-item>
+    <el-breadcrumb separator="/" class="breadcrumb">
+      <el-breadcrumb-item><a href="#">首页</a></el-breadcrumb-item>
+      <el-breadcrumb-item><a href="#">绩效管理</a></el-breadcrumb-item>
+      <el-breadcrumb-item><span class="breadcrumb-current">绩效月报查询</span></el-breadcrumb-item>
     </el-breadcrumb>
     <h1 class="page-title">绩效月报查询</h1>
     <PerformanceQuery />

@@ -47,6 +47,13 @@ body {
 
 /* 页面主体 */
 .page-main { padding: 20px 24px 40px; max-width: 1720px; margin: 0 auto; }
+
+/* 面包屑导航（对齐原型：父级可点、当前页加粗） */
+.breadcrumb { font-size: 13px; padding-bottom: 12px; }
+.breadcrumb a { color: #666666; text-decoration: none; transition: color 0.15s ease; }
+.breadcrumb a:hover { color: #2C7CF5; }
+.breadcrumb-current { color: #000000; font-weight: 500; }
+
 .page-title {
   font-size: 20px; font-weight: 600; color: #000000;
   line-height: 1.4; margin: 0 0 16px;
