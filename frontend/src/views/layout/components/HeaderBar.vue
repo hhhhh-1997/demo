@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import { Sunny, Moon, UserFilled, ArrowDown } from '@element-plus/icons-vue'
 import { useThemeStore } from '../../../stores/theme'
 import { useUserStore } from '../../../stores/user'
+import logoDefault from '../../../assets/logo-default.png'
+import logoWhite from '../../../assets/logo-white.png'
 
 /**
  * 顶栏：项目 logo、主题切换与用户下拉菜单（退出登录）。
@@ -17,6 +19,8 @@ const userStore = useUserStore()
 
 const nickname = computed(() => userStore.user?.nickname ?? '未登录')
 
+const logo = computed(() => (themeStore.theme === 'dark' ? logoWhite : logoDefault))
+
 /** 退出登录并跳转登录页。 */
 async function handleLogout(): Promise<void> {
   await userStore.logout()
@@ -27,6 +31,7 @@ async function handleLogout(): Promise<void> {
 <template>
   <div class="header-bar">
     <div class="header-logo">
+      <img class="header-logo-img" :src="logo" alt="logo" />
       <span class="header-title">综合计划储备项目管理</span>
     </div>
     <div class="header-actions">
@@ -67,9 +72,17 @@ async function handleLogout(): Promise<void> {
 }
 
 .header-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-primary);
+}
+
+.header-logo-img {
+  height: 28px;
+  width: auto;
 }
 
 .header-actions {
