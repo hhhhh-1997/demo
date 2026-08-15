@@ -122,9 +122,17 @@ public class ApiChainEngine {
             String url = buildUrl(scenario.getBaseUrl(), params.getPath());
             ResponseEntity<String> response = send(HttpMethod.valueOf(params.getMethod().toUpperCase()),
                     url, query, headers, bodyStr);
+            Object snapshotBody = params.getBody();
+            if (bodyStr != null) {
+                try {
+                    snapshotBody = objectMapper.readValue(bodyStr, Object.class);
+                } catch (JsonProcessingException e) {
+                    snapshotBody = bodyStr;
+                }
+            }
             result.setRequestSnapshot(objectMapper.writeValueAsString(
                     snapshotMasker.mask(buildRequestSnapshot(params.getMethod(), params.getPath(),
-                            headers, query, params.getBody()))));
+                            headers, query, snapshotBody))));
             result.setResponseSnapshot(objectMapper.writeValueAsString(
                     snapshotMasker.mask(buildResponseSnapshot(response))));
             String detail = assertEvaluator.evaluate(response.getStatusCode().value(), response.getBody(),
@@ -180,7 +188,7 @@ public class ApiChainEngine {
     }
 
     private Map<String, Object> buildRequestSnapshot(String method, String path, Map<String, String> headers,
-            Map<String, String> query, Map<String, Object> body) {
+            Map<String, String> query, Object body) {
         Map<String, Object> snap = new LinkedHashMap<>();
         snap.put("method", method);
         snap.put("path", path);

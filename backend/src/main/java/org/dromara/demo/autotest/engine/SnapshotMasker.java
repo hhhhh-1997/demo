@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -54,6 +55,6 @@ public class SnapshotMasker {
     }
 
     private boolean isSensitive(String key) {
-        return key != null && SENSITIVE_KEYS.contains(key.toLowerCase());
+        return key != null && SENSITIVE_KEYS.contains(key.toLowerCase(Locale.ROOT));
     }
 }

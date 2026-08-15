@@ -159,6 +159,9 @@ public class ScenarioService {
     }
 
     private String writeJson(Object o) {
+        if (o == null) {
+            return null;
+        }
         try {
             return objectMapper.writeValueAsString(o);
         } catch (JsonProcessingException e) {
