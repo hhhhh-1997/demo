@@ -14,6 +14,9 @@ interface Props {
   data: NameValue[]
 }
 
+/** 坐标轴文字色（原型固定 muted 灰）。 */
+const MUTED_TEXT = '#a0a0b0'
+
 const props = defineProps<Props>()
 
 const chartRef = ref<HTMLDivElement>()
@@ -27,13 +30,15 @@ function buildOption(): echarts.EChartsOption {
     xAxis: {
       type: 'category',
       data: props.data.map((item) => item.name),
+      axisLabel: { color: MUTED_TEXT },
     },
-    yAxis: { type: 'value' },
+    yAxis: { type: 'value', axisLabel: { color: MUTED_TEXT } },
     series: [
       {
         name: '项目数',
         type: 'bar',
         data: props.data.map((item) => item.value),
+        itemStyle: { color: '#1e88e5' },
       },
     ],
   }

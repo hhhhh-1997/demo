@@ -12,11 +12,11 @@ import SidebarMenu from './components/SidebarMenu.vue'
 
 <template>
   <el-container class="layout">
-    <el-header class="layout-header">
+    <el-header class="layout-header" height="64px">
       <HeaderBar />
     </el-header>
     <el-container class="layout-body">
-      <el-aside class="layout-aside" width="220px">
+      <el-aside class="layout-aside" width="280px">
         <SidebarMenu />
       </el-aside>
       <el-main class="layout-main">
@@ -32,24 +32,26 @@ import SidebarMenu from './components/SidebarMenu.vue'
 }
 
 .layout-header {
-  padding: 0 1rem;
-  background-color: var(--bg-secondary);
+  padding: 0 24px;
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow);
+  z-index: 100;
 }
 
 .layout-body {
-  height: calc(100vh - 60px);
+  height: calc(100vh - 64px);
 }
 
 .layout-aside {
-  background-color: var(--bg-tertiary);
+  background-color: var(--bg-primary);
   border-right: 1px solid var(--border-color);
   overflow-x: hidden;
 }
 
 .layout-main {
-  padding: 1rem;
-  background-color: var(--bg-primary);
+  padding: 24px;
+  background-color: var(--bg-tertiary);
   overflow-y: auto;
 }
 </style>

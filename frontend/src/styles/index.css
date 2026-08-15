@@ -7,7 +7,7 @@ body,
 }
 
 body {
-  background-color: var(--bg-primary);
+  background-color: var(--bg-tertiary);
   color: var(--text-primary);
   font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
     'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
@@ -30,7 +30,188 @@ a:hover {
   box-sizing: border-box;
 }
 
-/* 表格表头不换行（Element Plus 默认 .cell 允许换行，长表头如「投资金额（万元）」会折成两行）。 */
+/* ===== 按钮（复刻原型 .btn） ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(30, 136, 229, 0.4);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, var(--success-color) 0%, #388e3c 100%);
+  color: #fff;
+}
+
+.btn-success:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(67, 160, 71, 0.4);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, var(--danger-color) 0%, #c62828 100%);
+  color: #fff;
+}
+
+.btn-danger:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(229, 57, 53, 0.4);
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, var(--warning-color) 0%, #e65100 100%);
+  color: #fff;
+}
+
+.btn-warning:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(251, 140, 0, 0.4);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.btn-outline:hover:not(:disabled) {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* ===== 图标操作按钮（复刻原型 .icon-btn） ===== */
+.action-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.icon-btn.success {
+  color: var(--success-color);
+  border-color: var(--success-color);
+}
+
+.icon-btn.success:hover {
+  background: rgba(67, 160, 71, 0.15);
+  border-color: var(--success-color);
+  color: var(--success-color);
+}
+
+.icon-btn.danger:hover {
+  background: rgba(229, 57, 53, 0.15);
+  border-color: var(--danger-color);
+  color: var(--danger-color);
+}
+
+/* ===== 表格复刻（Element Plus 主题化） ===== */
+.el-table {
+  --el-table-bg-color: var(--bg-card);
+  --el-table-tr-bg-color: var(--bg-card);
+  --el-table-header-bg-color: var(--bg-secondary);
+  --el-table-header-text-color: var(--text-secondary);
+  --el-table-text-color: var(--text-primary);
+  --el-table-border-color: var(--border-color);
+  --el-table-row-hover-bg-color: var(--bg-hover);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.el-table th.el-table__cell {
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .el-table th.el-table__cell .cell {
   white-space: nowrap;
+}
+
+.el-table td.el-table__cell {
+  font-size: 14px;
+}
+
+/* ===== 弹窗复刻（毛玻璃 + 圆角） ===== */
+.el-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.el-dialog {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+}
+
+.el-dialog__header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.el-dialog__title {
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.el-dialog__body {
+  padding: 24px;
+}
+
+.el-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid var(--border-color);
 }

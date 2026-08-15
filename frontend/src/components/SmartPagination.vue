@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
 
 /**
  * 智能分页：左侧「共 N 条，显示第 M-N 条」，右侧上一页 / 页码 / 下一页。
@@ -87,11 +88,11 @@ function handlePageClick(item: number | string): void {
     </span>
     <div class="pagination-controls">
       <button
-        class="page-btn"
+        class="page-btn page-btn--icon"
         :disabled="currentPage <= 1"
         @click="handleChange(currentPage - 1)"
       >
-        上一页
+        <el-icon><ArrowLeft /></el-icon>
       </button>
       <button
         v-for="(item, index) in pages"
@@ -104,11 +105,11 @@ function handlePageClick(item: number | string): void {
         {{ item }}
       </button>
       <button
-        class="page-btn"
+        class="page-btn page-btn--icon"
         :disabled="currentPage >= totalPages"
         @click="handleChange(currentPage + 1)"
       >
-        下一页
+        <el-icon><ArrowRight /></el-icon>
       </button>
     </div>
   </div>
@@ -145,6 +146,13 @@ function handlePageClick(item: number | string): void {
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.page-btn--icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .page-btn:hover:not(:disabled):not(.ellipsis) {

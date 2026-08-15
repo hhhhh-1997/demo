@@ -21,6 +21,7 @@ import type {
   SysDictData,
 } from '../../types'
 import StatCard from '../../components/StatCard.vue'
+import StatusTag from '../../components/StatusTag.vue'
 import SmartPagination from '../../components/SmartPagination.vue'
 
 /**
@@ -331,22 +332,22 @@ onMounted(() => {
         <p class="page-description">人工复核论证是否准确，通过或退回业务流程</p>
       </div>
       <div class="header-actions">
-        <el-button
+        <button
           v-permission="'audit:batch'"
-          type="success"
-          :icon="CircleCheck"
+          class="btn btn-success"
           @click="handleBatch(true)"
         >
+          <el-icon><CircleCheck /></el-icon>
           批量通过
-        </el-button>
-        <el-button
+        </button>
+        <button
           v-permission="'audit:batch'"
-          type="danger"
-          :icon="CircleClose"
+          class="btn btn-outline"
           @click="handleBatch(false)"
         >
+          <el-icon><CircleClose /></el-icon>
           批量退回
-        </el-button>
+        </button>
       </div>
     </div>
 
@@ -421,7 +422,7 @@ onMounted(() => {
         <el-table-column prop="projectName" label="项目名称" min-width="200" show-overflow-tooltip />
         <el-table-column label="二级分类" width="120">
           <template #default="{ row }">
-            <el-tag size="small">{{ row.projectType }}</el-tag>
+            <StatusTag type="primary">{{ row.projectType }}</StatusTag>
           </template>
         </el-table-column>
         <el-table-column label="投资金额（万元）" width="160" align="right">
@@ -431,40 +432,40 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="论证结果" width="100">
           <template #default="{ row }">
-            <el-tag v-if="row.review" :type="reviewResultTagType(row.review.result)" size="small">
+            <StatusTag v-if="row.review" :type="reviewResultTagType(row.review.result)">
               {{ row.review.result }}
-            </el-tag>
+            </StatusTag>
             <span v-else class="empty-value">—</span>
           </template>
         </el-table-column>
         <el-table-column label="审核状态" width="110">
           <template #default="{ row }">
-            <el-tag :type="auditStatusTagType(row.status)" size="small">
+            <StatusTag :type="auditStatusTagType(row.status)">
               {{ auditStatusLabel(row.status) }}
-            </el-tag>
+            </StatusTag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
-            <el-button
-              v-if="isPendingAudit(row.status)"
-              v-permission="'audit:execute'"
-              link
-              type="primary"
-              :icon="Edit"
-              @click="openAudit(row)"
-            >
-              审核
-            </el-button>
-            <el-button
-              v-permission="'audit:view'"
-              link
-              type="primary"
-              :icon="View"
-              @click="openDetail(row)"
-            >
-              查看详情
-            </el-button>
+            <div class="action-buttons">
+              <button
+                v-if="isPendingAudit(row.status)"
+                v-permission="'audit:execute'"
+                class="icon-btn"
+                title="审核"
+                @click="openAudit(row)"
+              >
+                <el-icon><Edit /></el-icon>
+              </button>
+              <button
+                v-permission="'audit:view'"
+                class="icon-btn"
+                title="查看详情"
+                @click="openDetail(row)"
+              >
+                <el-icon><View /></el-icon>
+              </button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -491,7 +492,7 @@ onMounted(() => {
           <span class="readonly-text">{{ auditingRow?.projectName }}</span>
         </el-form-item>
         <el-form-item label="二级分类">
-          <el-tag v-if="auditingRow" size="small">{{ auditingRow.projectType }}</el-tag>
+          <StatusTag v-if="auditingRow" type="primary">{{ auditingRow.projectType }}</StatusTag>
         </el-form-item>
         <el-form-item label="投资金额">
           <span class="readonly-text">
@@ -499,9 +500,9 @@ onMounted(() => {
           </span>
         </el-form-item>
         <el-form-item label="论证结果">
-          <el-tag v-if="auditingRow?.review" :type="reviewResultTagType(auditingRow.review.result)" size="small">
+          <StatusTag v-if="auditingRow?.review" :type="reviewResultTagType(auditingRow.review.result)">
             {{ auditingRow.review.result }}
-          </el-tag>
+          </StatusTag>
           <span v-else class="empty-value">—</span>
         </el-form-item>
         <el-form-item label="论证意见">
@@ -525,8 +526,8 @@ onMounted(() => {
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="auditDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="auditing" @click="handleAuditSubmit">提交审核</el-button>
+        <button class="btn btn-outline" @click="auditDialogVisible = false">取消</button>
+        <button class="btn btn-primary" :disabled="auditing" @click="handleAuditSubmit">提交审核</button>
       </template>
     </el-dialog>
 
@@ -539,15 +540,15 @@ onMounted(() => {
           {{ detailData ? yuanToWan(detailData.project.investmentAmount) : '-' }}
         </el-descriptions-item>
         <el-descriptions-item label="论证结果">
-          <el-tag v-if="detailData?.reviewResult" :type="reviewResultTagType(detailData.reviewResult)" size="small">
+          <StatusTag v-if="detailData?.reviewResult" :type="reviewResultTagType(detailData.reviewResult)">
             {{ detailData.reviewResult }}
-          </el-tag>
+          </StatusTag>
           <span v-else class="empty-value">—</span>
         </el-descriptions-item>
         <el-descriptions-item label="审核状态">
-          <el-tag v-if="detailData" :type="auditStatusTagType(detailData.project.status)" size="small">
+          <StatusTag v-if="detailData" :type="auditStatusTagType(detailData.project.status)">
             {{ auditStatusLabel(detailData.project.status) }}
-          </el-tag>
+          </StatusTag>
           <span v-else>-</span>
         </el-descriptions-item>
         <el-descriptions-item label="论证意见" :span="2">

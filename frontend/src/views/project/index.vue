@@ -25,6 +25,7 @@ import type {
   SysDictData,
 } from '../../types'
 import StatCard from '../../components/StatCard.vue'
+import StatusTag from '../../components/StatusTag.vue'
 import SmartPagination from '../../components/SmartPagination.vue'
 
 /**
@@ -424,9 +425,10 @@ onMounted(() => {
         <h1 class="page-title">储备项目维护</h1>
         <p class="page-description">维护储备项目，支持新增、编辑、删除及提报操作</p>
       </div>
-      <el-button v-permission="'project:add'" type="primary" :icon="Plus" @click="openCreate">
+      <button v-permission="'project:add'" class="btn btn-primary" @click="openCreate">
+        <el-icon><Plus /></el-icon>
         新增项目
-      </el-button>
+      </button>
     </div>
 
     <div class="stats-grid">
@@ -504,17 +506,18 @@ onMounted(() => {
       <div class="card-header">
         <h3 class="card-title">项目列表</h3>
         <div class="card-actions">
-          <el-button
+          <button
             v-permission="'project:submit'"
-            type="success"
-            :icon="Promotion"
+            class="btn btn-sm btn-success"
             @click="handleBatchSubmit"
           >
+            <el-icon><Promotion /></el-icon>
             批量提报
-          </el-button>
-          <el-button v-permission="'project:export'" :icon="Download" @click="handleExport">
+          </button>
+          <button v-permission="'project:export'" class="btn btn-sm btn-outline" @click="handleExport">
+            <el-icon><Download /></el-icon>
             导出
-          </el-button>
+          </button>
         </div>
       </div>
 
@@ -529,7 +532,7 @@ onMounted(() => {
         <el-table-column prop="projectName" label="项目名称" min-width="220" show-overflow-tooltip />
         <el-table-column label="二级分类" width="120">
           <template #default="{ row }">
-            <el-tag size="small">{{ row.projectType }}</el-tag>
+            <StatusTag type="primary">{{ row.projectType }}</StatusTag>
           </template>
         </el-table-column>
         <el-table-column label="投资金额（万元）" width="160" align="right">
@@ -540,7 +543,7 @@ onMounted(() => {
         <el-table-column prop="deptName" label="所属单位" width="140" show-overflow-tooltip />
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="statusTagType(row.status)" size="small">{{ row.status }}</el-tag>
+            <StatusTag :type="statusTagType(row.status)">{{ row.status }}</StatusTag>
           </template>
         </el-table-column>
         <el-table-column label="创建时间" width="160">
@@ -550,36 +553,35 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
-            <el-button
-              v-if="isEditable(row.status)"
-              v-permission="'project:submit'"
-              link
-              type="primary"
-              title="提报"
-              @click="handleSubmit(row)"
-            >
-              <el-icon><Promotion /></el-icon>
-            </el-button>
-            <el-button
-              v-if="isEditable(row.status)"
-              v-permission="'project:edit'"
-              link
-              type="primary"
-              title="编辑"
-              @click="openEdit(row)"
-            >
-              <el-icon><Edit /></el-icon>
-            </el-button>
-            <el-button
-              v-if="isDeletable(row.status)"
-              v-permission="'project:delete'"
-              link
-              type="danger"
-              title="删除"
-              @click="handleDelete(row)"
-            >
-              <el-icon><Delete /></el-icon>
-            </el-button>
+            <div class="action-buttons">
+              <button
+                v-if="isEditable(row.status)"
+                v-permission="'project:submit'"
+                class="icon-btn success"
+                title="提报"
+                @click="handleSubmit(row)"
+              >
+                <el-icon><Promotion /></el-icon>
+              </button>
+              <button
+                v-if="isEditable(row.status)"
+                v-permission="'project:edit'"
+                class="icon-btn"
+                title="编辑"
+                @click="openEdit(row)"
+              >
+                <el-icon><Edit /></el-icon>
+              </button>
+              <button
+                v-if="isDeletable(row.status)"
+                v-permission="'project:delete'"
+                class="icon-btn danger"
+                title="删除"
+                @click="handleDelete(row)"
+              >
+                <el-icon><Delete /></el-icon>
+              </button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -644,8 +646,8 @@ onMounted(() => {
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="handleSave">保存</el-button>
+        <button class="btn btn-outline" @click="dialogVisible = false">取消</button>
+        <button class="btn btn-primary" :disabled="saving" @click="handleSave">保存</button>
       </template>
     </el-dialog>
   </div>

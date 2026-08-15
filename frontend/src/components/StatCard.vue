@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * 统计卡片：渐变图标卡片，用于页面顶部统计展示。
+ * 统计卡片：卡片底 + 彩色大数字 + 渐变圆角图标块，用于页面顶部统计展示。
  *
  * @author demo
  * @since 2026-08-15
@@ -12,7 +12,7 @@ interface Props {
   title: string
   /** 卡片数值。 */
   value: number | string
-  /** 渐变配色。 */
+  /** 配色。 */
   color: StatColor
   /** Element Plus 图标组件名。 */
   icon: string
@@ -38,53 +38,85 @@ defineProps<Props>()
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.25rem 1.5rem;
+  padding: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
-  color: #ffffff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s;
 }
 
-.stat-card.primary {
-  background: linear-gradient(135deg, var(--primary-color) 0%, #0d47a1 100%);
-}
-
-.stat-card.success {
-  background: linear-gradient(135deg, var(--success-color) 0%, #1b5e20 100%);
-}
-
-.stat-card.warning {
-  background: linear-gradient(135deg, var(--warning-color) 0%, #e65100 100%);
-}
-
-.stat-card.danger {
-  background: linear-gradient(135deg, var(--danger-color) 0%, #b71c1c 100%);
-}
-
-.stat-card.info {
-  background: linear-gradient(135deg, var(--info-color) 0%, #006064 100%);
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow);
+  border-color: var(--primary-color);
 }
 
 .stat-value {
-  margin: 0;
-  font-size: 1.75rem;
+  margin: 0 0 4px;
+  font-size: 32px;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1;
 }
 
 .stat-title {
-  margin: 0.25rem 0 0;
-  font-size: 0.85rem;
-  opacity: 0.9;
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
 }
 
 .stat-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
-  font-size: 22px;
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.stat-card.primary .stat-value {
+  color: var(--primary-color);
+}
+
+.stat-card.primary .stat-icon {
+  background: linear-gradient(135deg, rgba(30, 136, 229, 0.2) 0%, rgba(30, 136, 229, 0.1) 100%);
+  color: var(--primary-color);
+}
+
+.stat-card.success .stat-value {
+  color: var(--success-color);
+}
+
+.stat-card.success .stat-icon {
+  background: linear-gradient(135deg, rgba(67, 160, 71, 0.2) 0%, rgba(67, 160, 71, 0.1) 100%);
+  color: var(--success-color);
+}
+
+.stat-card.warning .stat-value {
+  color: var(--warning-color);
+}
+
+.stat-card.warning .stat-icon {
+  background: linear-gradient(135deg, rgba(251, 140, 0, 0.2) 0%, rgba(251, 140, 0, 0.1) 100%);
+  color: var(--warning-color);
+}
+
+.stat-card.danger .stat-value {
+  color: var(--danger-color);
+}
+
+.stat-card.danger .stat-icon {
+  background: linear-gradient(135deg, rgba(229, 57, 53, 0.2) 0%, rgba(229, 57, 53, 0.1) 100%);
+  color: var(--danger-color);
+}
+
+.stat-card.info .stat-value {
+  color: var(--info-color);
+}
+
+.stat-card.info .stat-icon {
+  background: linear-gradient(135deg, rgba(0, 172, 193, 0.2) 0%, rgba(0, 172, 193, 0.1) 100%);
+  color: var(--info-color);
 }
 </style>

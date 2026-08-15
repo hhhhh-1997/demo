@@ -14,6 +14,12 @@ interface Props {
   data: NameValue[]
 }
 
+/** 固定分类配色（对齐原型图）。 */
+const PALETTE = ['#1e88e5', '#43a047', '#fb8c00', '#00acc1', '#8e24aa', '#5c6bc0', '#26a69a', '#ec407a']
+
+/** 图例/坐标轴文字色（原型固定 muted 灰，暗亮主题均可用）。 */
+const MUTED_TEXT = '#a0a0b0'
+
 const props = defineProps<Props>()
 
 const chartRef = ref<HTMLDivElement>()
@@ -23,7 +29,7 @@ let chart: echarts.ECharts | null = null
 function buildOption(): echarts.EChartsOption {
   return {
     tooltip: { trigger: 'item' },
-    legend: { top: '5%', left: 'center' },
+    legend: { top: '5%', left: 'center', textStyle: { color: MUTED_TEXT } },
     series: [
       {
         name: '项目分类',
@@ -33,7 +39,11 @@ function buildOption(): echarts.EChartsOption {
         itemStyle: { borderColor: 'transparent', borderWidth: 0 },
         label: { show: false },
         emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
-        data: props.data.map((item) => ({ name: item.name, value: item.value })),
+        data: props.data.map((item, index) => ({
+          name: item.name,
+          value: item.value,
+          itemStyle: { color: PALETTE[index % PALETTE.length] },
+        })),
       },
     ],
   }

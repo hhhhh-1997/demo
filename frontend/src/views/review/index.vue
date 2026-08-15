@@ -16,6 +16,7 @@ import type {
   SysDictData,
 } from '../../types'
 import StatCard from '../../components/StatCard.vue'
+import StatusTag from '../../components/StatusTag.vue'
 import SmartPagination from '../../components/SmartPagination.vue'
 
 /**
@@ -357,80 +358,64 @@ onMounted(() => {
         <el-table-column prop="projectName" label="项目名称" min-width="200" show-overflow-tooltip />
         <el-table-column label="信息完整性" width="110">
           <template #default="{ row }">
-            <el-tag
-              v-if="row.review"
-              :type="checkItemTagType('infoComplete', row.review.infoComplete)"
-              size="small"
-            >
+            <StatusTag v-if="row.review" :type="checkItemTagType('infoComplete', row.review.infoComplete)">
               {{ row.review.infoComplete }}
-            </el-tag>
+            </StatusTag>
             <span v-else class="empty-value">—</span>
           </template>
         </el-table-column>
         <el-table-column label="三重一大" width="100">
           <template #default="{ row }">
-            <el-tag
-              v-if="row.review"
-              :type="checkItemTagType('threeImportant', row.review.threeImportant)"
-              size="small"
-            >
+            <StatusTag v-if="row.review" :type="checkItemTagType('threeImportant', row.review.threeImportant)">
               {{ row.review.threeImportant }}
-            </el-tag>
+            </StatusTag>
             <span v-else class="empty-value">—</span>
           </template>
         </el-table-column>
         <el-table-column label="拆分立项" width="100">
           <template #default="{ row }">
-            <el-tag
-              v-if="row.review"
-              :type="checkItemTagType('splitProject', row.review.splitProject)"
-              size="small"
-            >
+            <StatusTag v-if="row.review" :type="checkItemTagType('splitProject', row.review.splitProject)">
               {{ row.review.splitProject }}
-            </el-tag>
+            </StatusTag>
             <span v-else class="empty-value">—</span>
           </template>
         </el-table-column>
         <el-table-column label="界面混淆" width="100">
           <template #default="{ row }">
-            <el-tag
-              v-if="row.review"
-              :type="checkItemTagType('interfaceConfusion', row.review.interfaceConfusion)"
-              size="small"
-            >
+            <StatusTag v-if="row.review" :type="checkItemTagType('interfaceConfusion', row.review.interfaceConfusion)">
               {{ row.review.interfaceConfusion }}
-            </el-tag>
+            </StatusTag>
             <span v-else class="empty-value">—</span>
           </template>
         </el-table-column>
         <el-table-column label="论证状态" width="110">
           <template #default="{ row }">
-            <el-tag :type="reviewStatusTagType(row.status)" size="small">
+            <StatusTag :type="reviewStatusTagType(row.status)">
               {{ reviewStatusLabel(row.status) }}
-            </el-tag>
+            </StatusTag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
-            <el-button
-              v-if="isPendingReview(row.status)"
-              v-permission="'review:execute'"
-              link
-              type="primary"
-              :icon="CircleCheck"
-              @click="openReview(row)"
-            >
-              论证
-            </el-button>
-            <el-button
-              v-permission="'review:view'"
-              link
-              type="primary"
-              :icon="View"
-              @click="openDetail(row)"
-            >
-              查看详情
-            </el-button>
+            <div class="action-buttons">
+              <button
+                v-if="isPendingReview(row.status)"
+                v-permission="'review:execute'"
+                class="icon-btn success"
+                title="论证"
+                @click="openReview(row)"
+              >
+                <el-icon><CircleCheck /></el-icon>
+              </button>
+              <button
+                v-permission="'review:view'"
+                class="icon-btn"
+                title="查看详情"
+                @click="openDetail(row)"
+              >
+                <el-icon><View /></el-icon>
+              </button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -498,8 +483,8 @@ onMounted(() => {
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="reviewDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="reviewing" @click="handleReviewSubmit">提交论证</el-button>
+        <button class="btn btn-outline" @click="reviewDialogVisible = false">取消</button>
+        <button class="btn btn-primary" :disabled="reviewing" @click="handleReviewSubmit">提交论证</button>
       </template>
     </el-dialog>
 
@@ -513,49 +498,33 @@ onMounted(() => {
         </el-descriptions-item>
         <el-descriptions-item label="所属单位">{{ detailData?.project.deptName ?? '-' }}</el-descriptions-item>
         <el-descriptions-item label="论证状态">
-          <el-tag v-if="detailData" :type="reviewStatusTagType(detailData.project.status)" size="small">
+          <StatusTag v-if="detailData" :type="reviewStatusTagType(detailData.project.status)">
             {{ reviewStatusLabel(detailData.project.status) }}
-          </el-tag>
+          </StatusTag>
           <span v-else>-</span>
         </el-descriptions-item>
         <el-descriptions-item label="信息完整性">
-          <el-tag
-            v-if="detailData?.review"
-            :type="checkItemTagType('infoComplete', detailData.review.infoComplete)"
-            size="small"
-          >
+          <StatusTag v-if="detailData?.review" :type="checkItemTagType('infoComplete', detailData.review.infoComplete)">
             {{ detailData.review.infoComplete }}
-          </el-tag>
+          </StatusTag>
           <span v-else class="empty-value">—</span>
         </el-descriptions-item>
         <el-descriptions-item label="三重一大">
-          <el-tag
-            v-if="detailData?.review"
-            :type="checkItemTagType('threeImportant', detailData.review.threeImportant)"
-            size="small"
-          >
+          <StatusTag v-if="detailData?.review" :type="checkItemTagType('threeImportant', detailData.review.threeImportant)">
             {{ detailData.review.threeImportant }}
-          </el-tag>
+          </StatusTag>
           <span v-else class="empty-value">—</span>
         </el-descriptions-item>
         <el-descriptions-item label="拆分立项">
-          <el-tag
-            v-if="detailData?.review"
-            :type="checkItemTagType('splitProject', detailData.review.splitProject)"
-            size="small"
-          >
+          <StatusTag v-if="detailData?.review" :type="checkItemTagType('splitProject', detailData.review.splitProject)">
             {{ detailData.review.splitProject }}
-          </el-tag>
+          </StatusTag>
           <span v-else class="empty-value">—</span>
         </el-descriptions-item>
         <el-descriptions-item label="界面混淆">
-          <el-tag
-            v-if="detailData?.review"
-            :type="checkItemTagType('interfaceConfusion', detailData.review.interfaceConfusion)"
-            size="small"
-          >
+          <StatusTag v-if="detailData?.review" :type="checkItemTagType('interfaceConfusion', detailData.review.interfaceConfusion)">
             {{ detailData.review.interfaceConfusion }}
-          </el-tag>
+          </StatusTag>
           <span v-else class="empty-value">—</span>
         </el-descriptions-item>
         <el-descriptions-item label="论证时间">{{ formatDateTime(detailData?.review?.reviewTime ?? '') }}</el-descriptions-item>

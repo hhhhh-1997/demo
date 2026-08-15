@@ -20,6 +20,7 @@ import type {
   SysDictData,
 } from '../../types'
 import StatCard from '../../components/StatCard.vue'
+import StatusTag from '../../components/StatusTag.vue'
 import SmartPagination from '../../components/SmartPagination.vue'
 import CategoryPie from './components/CategoryPie.vue'
 import DeptBar from './components/DeptBar.vue'
@@ -342,9 +343,10 @@ onMounted(() => {
       <div class="card-header">
         <h3 class="card-title">项目列表</h3>
         <div class="card-actions">
-          <el-button v-permission="'reserve:export'" :icon="Download" @click="handleExport">
+          <button v-permission="'reserve:export'" class="btn btn-sm btn-outline" @click="handleExport">
+            <el-icon><Download /></el-icon>
             导出
-          </el-button>
+          </button>
         </div>
       </div>
 
@@ -353,7 +355,7 @@ onMounted(() => {
         <el-table-column prop="projectName" label="项目名称" min-width="200" show-overflow-tooltip />
         <el-table-column label="二级分类" width="120">
           <template #default="{ row }">
-            <el-tag size="small">{{ row.projectType }}</el-tag>
+            <StatusTag type="primary">{{ row.projectType }}</StatusTag>
           </template>
         </el-table-column>
         <el-table-column label="投资金额（万元）" width="160" align="right">
@@ -369,31 +371,31 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="statusTagType(row.status)" size="small">{{ row.status }}</el-tag>
+            <StatusTag :type="statusTagType(row.status)">{{ row.status }}</StatusTag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
-            <el-button
-              v-if="row.status === '待下达'"
-              v-permission="'reserve:issue'"
-              link
-              type="success"
-              :loading="issuingId === row.id"
-              :icon="Promotion"
-              @click="handleIssue(row)"
-            >
-              下达
-            </el-button>
-            <el-button
-              v-permission="'reserve:view'"
-              link
-              type="primary"
-              :icon="View"
-              @click="openDetail(row)"
-            >
-              查看详情
-            </el-button>
+            <div class="action-buttons">
+              <button
+                v-if="row.status === '待下达'"
+                v-permission="'reserve:issue'"
+                class="icon-btn success"
+                title="下达"
+                :disabled="issuingId === row.id"
+                @click="handleIssue(row)"
+              >
+                <el-icon><Promotion /></el-icon>
+              </button>
+              <button
+                v-permission="'reserve:view'"
+                class="icon-btn"
+                title="查看详情"
+                @click="openDetail(row)"
+              >
+                <el-icon><View /></el-icon>
+              </button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -427,21 +429,21 @@ onMounted(() => {
           {{ formatDateTime(detailData?.project.createTime ?? '') }}
         </el-descriptions-item>
         <el-descriptions-item label="状态">
-          <el-tag v-if="detailData" :type="statusTagType(detailData.project.status)" size="small">
+          <StatusTag v-if="detailData" :type="statusTagType(detailData.project.status)">
             {{ detailData.project.status }}
-          </el-tag>
+          </StatusTag>
           <span v-else>-</span>
         </el-descriptions-item>
         <el-descriptions-item label="论证状态">
-          <el-tag v-if="detailData?.review" :type="resultTagType(detailData.review.result)" size="small">
+          <StatusTag v-if="detailData?.review" :type="resultTagType(detailData.review.result)">
             {{ detailData.review.result }}
-          </el-tag>
+          </StatusTag>
           <span v-else class="empty-value">—</span>
         </el-descriptions-item>
         <el-descriptions-item label="审核状态">
-          <el-tag v-if="detailData?.audit" :type="resultTagType(detailData.audit.result)" size="small">
+          <StatusTag v-if="detailData?.audit" :type="resultTagType(detailData.audit.result)">
             {{ detailData.audit.result }}
-          </el-tag>
+          </StatusTag>
           <span v-else class="empty-value">—</span>
         </el-descriptions-item>
         <el-descriptions-item label="下达时间">
