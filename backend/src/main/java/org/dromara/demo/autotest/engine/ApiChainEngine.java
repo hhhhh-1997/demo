@@ -119,7 +119,8 @@ public class ApiChainEngine {
             Map<String, String> query = placeholderResolver.resolveMap(params.getQuery(), ctx);
             String bodyStr = params.getBody() == null ? null
                     : placeholderResolver.resolve(objectMapper.writeValueAsString(params.getBody()), ctx);
-            String url = buildUrl(scenario.getBaseUrl(), params.getPath());
+            String resolvedPath = placeholderResolver.resolve(params.getPath(), ctx);
+            String url = buildUrl(scenario.getBaseUrl(), resolvedPath);
             ResponseEntity<String> response = send(HttpMethod.valueOf(params.getMethod().toUpperCase()),
                     url, query, headers, bodyStr);
             Object snapshotBody = params.getBody();
@@ -131,7 +132,7 @@ public class ApiChainEngine {
                 }
             }
             result.setRequestSnapshot(objectMapper.writeValueAsString(
-                    snapshotMasker.mask(buildRequestSnapshot(params.getMethod(), params.getPath(),
+                    snapshotMasker.mask(buildRequestSnapshot(params.getMethod(), resolvedPath,
                             headers, query, snapshotBody))));
             result.setResponseSnapshot(objectMapper.writeValueAsString(
                     snapshotMasker.mask(buildResponseSnapshot(response))));

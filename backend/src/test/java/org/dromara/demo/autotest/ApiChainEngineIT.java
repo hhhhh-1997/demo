@@ -100,6 +100,36 @@ class ApiChainEngineIT {
     }
 
     @Test
+    void run_pathSubstitution_shouldResolveProjectId() throws Exception {
+        String token = login();
+        long scenarioId = createScenario(token, "{\"name\":\"路径变量链路\",\"baseUrl\":\"http://localhost:"
+                + port + "\",\"variables\":{\"username\":\"admin\",\"password\":\"123456\"},\"steps\":["
+                + "{\"name\":\"登录\",\"method\":\"POST\",\"path\":\"/api/auth/login\","
+                + "\"headers\":{\"Content-Type\":\"application/json\"},\"query\":{},"
+                + "\"body\":{\"username\":\"{{username}}\",\"password\":\"{{password}}\"},"
+                + "\"asserts\":[{\"type\":\"STATUS\",\"expected\":\"200\"}],"
+                + "\"extracts\":[{\"name\":\"token\",\"jsonPath\":\"$.data.token\"}]},"
+                + "{\"name\":\"新建项目\",\"method\":\"POST\",\"path\":\"/api/project\","
+                + "\"headers\":{\"Content-Type\":\"application/json\",\"Authorization\":\"{{token}}\"},\"query\":{},"
+                + "\"body\":{\"projectName\":\"路径变量测试项目\",\"projectType\":\"电网基建\","
+                + "\"investmentAmount\":500000,\"deptId\":1},"
+                + "\"asserts\":[{\"type\":\"STATUS\",\"expected\":\"200\"}],"
+                + "\"extracts\":[{\"name\":\"projectId\",\"jsonPath\":\"$.data\"}]},"
+                + "{\"name\":\"路径引用\",\"method\":\"GET\",\"path\":\"/api/project/{{projectId}}\","
+                + "\"headers\":{\"Authorization\":\"{{token}}\"},\"query\":{},\"body\":{},"
+                + "\"asserts\":[{\"type\":\"JSON\",\"jsonPath\":\"$.code\",\"op\":\"EQUALS\",\"expected\":\"200\"}],"
+                + "\"extracts\":[]}]}");
+        long runId = run(token, scenarioId);
+        JsonNode data = om.readTree(waitForRun(runId, token)).get("data");
+        assertEquals(1, data.get("status").asInt());
+        JsonNode steps = data.get("steps");
+        assertEquals(3, steps.size());
+        for (JsonNode step : steps) {
+            assertEquals(0, step.get("status").asInt());
+        }
+    }
+
+    @Test
     void run_assertFail_shouldAbortAndSkipRemaining() throws Exception {
         String token = login();
         long scenarioId = createScenario(token, "{\"name\":\"失败链路\",\"baseUrl\":\"http://localhost:"
