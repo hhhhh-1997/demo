@@ -3,10 +3,11 @@ import { nextTick, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { Plus, CaretTop, CaretBottom, Delete, VideoPlay, Edit } from '@element-plus/icons-vue'
-import { create, detail, page, remove, run, update } from '../../../api/autotest'
-import type { AssertItem, AssertOp, AssertType, ExtractItem, ScenarioSaveDTO, ScenarioVO, StepItem } from '../../../types'
+import { Clock, Plus, CaretTop, CaretBottom, Delete, VideoPlay, Edit } from '@element-plus/icons-vue'
+import { create, detail, page, remove, run, runPage, update } from '../../../api/autotest'
+import type { AssertItem, AssertOp, AssertType, ExtractItem, RunStatus, RunVO, ScenarioSaveDTO, ScenarioVO, StepItem } from '../../../types'
 import SmartPagination from '../../../components/SmartPagination.vue'
+import StatusTag from '../../../components/StatusTag.vue'
 
 /**
  * 自动化测试场景管理页：场景表格 + 步骤编排器抽屉。
@@ -68,6 +69,11 @@ const form = reactive({
 const rules: FormRules = {
   name: [{ required: true, message: '请输入场景名', trigger: 'blur' }],
 }
+
+const historyDialogVisible = ref(false)
+const historyLoading = ref(false)
+const historyScenarioName = ref('')
+const historyRuns = ref<RunVO[]>([])
 
 /** 空步骤。 */
 function emptyStep(): StepEditorModel {
@@ -270,6 +276,40 @@ async function handleRun(row: ScenarioVO): Promise<void> {
   }
 }
 
+function runStatusLabel(status: RunStatus): string {
+  if (status === 0) return '运行中'
+  if (status === 1) return '成功'
+  return '失败'
+}
+
+function runStatusType(status: RunStatus): 'warning' | 'success' | 'danger' {
+  if (status === 0) return 'warning'
+  if (status === 1) return 'success'
+  return 'danger'
+}
+
+function formatTime(value: string | null): string {
+  return value ? value.replace('T', ' ') : '-'
+}
+
+async function openHistory(row: ScenarioVO): Promise<void> {
+  historyScenarioName.value = row.name
+  historyDialogVisible.value = true
+  historyLoading.value = true
+  try {
+    const res = await runPage({ scenarioId: row.id, pageNum: 1, pageSize: 50 })
+    historyRuns.value = res.data?.list ?? []
+  } catch {
+    historyRuns.value = []
+  } finally {
+    historyLoading.value = false
+  }
+}
+
+function viewRunDetail(runId: number): void {
+  router.push(`/autotest/run/${runId}`)
+}
+
 /** 步骤增删与排序。 */
 function addStep(): void {
   form.steps.push(emptyStep())
@@ -350,6 +390,9 @@ onMounted(loadScenarios)
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <div class="action-buttons">
+              <button v-permission="'autotest:scenario:list'" class="icon-btn" title="执行历史" @click="openHistory(row)">
+                <el-icon><Clock /></el-icon>
+              </button>
               <button v-permission="'autotest:scenario:run'" class="icon-btn success" title="运行" @click="handleRun(row)">
                 <el-icon><VideoPlay /></el-icon>
               </button>
@@ -465,6 +508,33 @@ onMounted(loadScenarios)
         <button class="btn btn-primary" :disabled="saving" @click="handleSave">保存</button>
       </template>
     </el-drawer>
+
+    <el-dialog v-model="historyDialogVisible" :title="`执行历史 - ${historyScenarioName}`" width="820px">
+      <el-table v-loading="historyLoading" :data="historyRuns" row-key="id">
+        <el-table-column prop="id" label="运行编号" width="100" />
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <StatusTag :type="runStatusType(row.status)">{{ runStatusLabel(row.status) }}</StatusTag>
+          </template>
+        </el-table-column>
+        <el-table-column label="开始时间" width="180">
+          <template #default="{ row }">{{ formatTime(row.startTime) }}</template>
+        </el-table-column>
+        <el-table-column label="结束时间" width="180">
+          <template #default="{ row }">{{ formatTime(row.endTime) }}</template>
+        </el-table-column>
+        <el-table-column prop="errorMsg" label="错误信息" min-width="200" show-overflow-tooltip />
+        <el-table-column label="操作" width="90" fixed="right">
+          <template #default="{ row }">
+            <button class="btn btn-outline btn-sm" @click="viewRunDetail(row.id)">查看</button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div v-if="!historyLoading && historyRuns.length === 0" class="history-empty">暂无执行历史</div>
+      <template #footer>
+        <button class="btn btn-outline" @click="historyDialogVisible = false">关闭</button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -602,5 +672,11 @@ onMounted(loadScenarios)
 .btn-sm {
   padding: 0.2rem 0.6rem;
   font-size: 0.85rem;
+}
+
+.history-empty {
+  padding: 1.5rem 0;
+  color: var(--text-muted);
+  text-align: center;
 }
 </style>
